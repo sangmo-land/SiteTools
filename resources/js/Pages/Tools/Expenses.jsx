@@ -18,7 +18,6 @@ import {
     WalletCards,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { createWorker } from 'tesseract.js';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -197,18 +196,10 @@ export default function Expenses({
             return;
         }
 
-        if (file.type.startsWith('image/')) {
-            setReceiptPreview(URL.createObjectURL(file));
-            await scanReceipt(file, expenseForm, setOcrState);
-            return;
-        }
-
-        setReceiptPreview(null);
-        setOcrState({
-            status: 'ready',
-            progress: 0,
-            message: 'PDF attached',
-        });
+        setReceiptPreview(
+            file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+        );
+        await scanReceipt(file, expenseForm, setOcrState);
     };
 
     const deleteExpense = (expense) => {
@@ -705,7 +696,7 @@ export default function Expenses({
                             <p className="text-sm text-zinc-500">
                                 {computedTotal !== null
                                     ? `Calculated total: ${formatMoney(computedTotal)}`
-                                    : 'Receipt OCR can prefill vendor, date, and total.'}
+                                    : 'AI receipt scanning can prefill vendor, date, and total.'}
                             </p>
                             <button
                                 type="submit"
@@ -948,102 +939,50 @@ export default function Expenses({
 async function scanReceipt(file, expenseForm, setOcrState) {
     setOcrState({
         status: 'scanning',
-        progress: 1,
-        message: 'Preparing scanner',
+        progress: 15,
+        message: 'Sending receipt to AI',
     });
 
-    let worker;
-
     try {
-        worker = await createWorker('eng', 1, {
-            logger: (message) => {
-                if (message.status === 'recognizing text') {
-                    setOcrState({
-                        status: 'scanning',
-                        progress: Math.round(message.progress * 100),
-                        message: 'Reading receipt',
-                    });
-                }
+        const formData = new FormData();
+        formData.append('receipt', file);
+
+        const response = await window.axios.post(
+            route('tools.expenses.scan-receipt'),
+            formData,
+            {
+                headers: {
+                    Accept: 'application/json',
+                },
             },
-        });
-
-        const {
-            data: { text, confidence },
-        } = await worker.recognize(file);
-        const extracted = extractReceiptData(text || '');
-
-        expenseForm.setData('receipt_text', text || '');
-        expenseForm.setData(
-            'receipt_confidence',
-            confidence ? Number(confidence).toFixed(2) : '',
         );
+        const scan = response.data;
 
-        Object.entries(extracted).forEach(([field, value]) => {
-            if (value && !expenseForm.data[field]) {
-                expenseForm.setData(field, value);
-            }
+        expenseForm.setData({
+            ...expenseForm.data,
+            receipt_text: scan.text || '',
+            receipt_confidence: scan.confidence ?? '',
+            vendor: expenseForm.data.vendor || scan.vendor || '',
+            purchase_date:
+                scan.purchase_date || expenseForm.data.purchase_date,
+            total_amount:
+                expenseForm.data.total_amount || scan.total_amount || '',
         });
 
         setOcrState({
             status: 'complete',
             progress: 100,
-            message: 'Scan complete',
+            message: 'AI scan complete',
         });
     } catch (error) {
         setOcrState({
             status: 'error',
             progress: 0,
-            message: 'Scan unavailable',
+            message:
+                error.response?.data?.message ||
+                'AI scan unavailable. Enter the details manually.',
         });
-    } finally {
-        if (worker) {
-            await worker.terminate();
-        }
     }
-}
-
-function extractReceiptData(text) {
-    const lines = text
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-    const totalLine =
-        lines.find((line) => /grand\s*total|total|amount\s*due/i.test(line)) ||
-        '';
-    const amounts = parseAmounts(totalLine).length
-        ? parseAmounts(totalLine)
-        : parseAmounts(text);
-    const totalAmount = amounts.length ? Math.max(...amounts).toFixed(0) : '';
-    const dateMatch = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/);
-    const purchaseDate = dateMatch ? normalizeDate(dateMatch) : '';
-    const vendor =
-        lines.find((line) => /[a-z]/i.test(line) && line.length <= 50) || '';
-
-    return {
-        vendor,
-        purchase_date: purchaseDate,
-        total_amount: totalAmount,
-    };
-}
-
-function parseAmounts(text) {
-    return [
-        ...text.matchAll(
-            /(?:FCFA|XAF|CFA|F)?\s*([0-9]{1,3}(?:[,. ]?[0-9]{3})+|[0-9]+)(?:\.[0-9]{1,2})?/gi,
-        ),
-    ]
-        .map((match) => Number(match[1].replace(/[,. ]/g, '')))
-        .filter((amount) => Number.isFinite(amount) && amount > 0);
-}
-
-function normalizeDate(match) {
-    const first = Number(match[1]);
-    const second = Number(match[2]);
-    const year = match[3].length === 2 ? `20${match[3]}` : match[3];
-    const day = first > 12 ? first : second;
-    const month = first > 12 ? second : first;
-
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 function compactFilters(filters) {
@@ -1069,7 +1008,7 @@ function ReceiptScanner({
                         Receipt scanner
                     </h2>
                     <p className="text-sm text-zinc-500">
-                        Browser OCR for image receipts
+                        OpenAI vision for receipt images and PDFs
                     </p>
                 </div>
             </div>
@@ -1109,7 +1048,7 @@ function ReceiptScanner({
                 value={receiptText}
                 onChange={(event) => onReceiptTextChange(event.target.value)}
                 className="mt-4 min-h-32 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="OCR text appears here"
+                placeholder="AI-extracted receipt text appears here"
             />
         </section>
     );

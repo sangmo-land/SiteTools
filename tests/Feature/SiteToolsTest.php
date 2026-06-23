@@ -7,6 +7,9 @@ use App\Models\Material;
 use App\Models\SiteProject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -115,5 +118,78 @@ class SiteToolsTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Tools/Calculators'));
+    }
+
+    public function test_user_can_scan_a_receipt_with_openai(): void
+    {
+        config([
+            'services.openai.api_key' => 'test-key',
+            'services.openai.base_url' => 'https://api.openai.com/v1',
+            'services.openai.receipt_model' => 'gpt-5.4-mini',
+        ]);
+
+        Http::fake([
+            'api.openai.com/v1/responses' => Http::response([
+                'output' => [[
+                    'type' => 'message',
+                    'content' => [[
+                        'type' => 'output_text',
+                        'text' => json_encode([
+                            'raw_text' => "DEPOT 12\nTOTAL 60,900 FCFA",
+                            'vendor' => 'Depot 12',
+                            'purchase_date' => '2026-06-20',
+                            'total_amount' => 60900,
+                            'currency' => 'XAF',
+                            'confidence' => 96.5,
+                        ]),
+                    ]],
+                ]],
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+        $receipt = UploadedFile::fake()->image('receipt.jpg');
+
+        $this->actingAs($user)
+            ->post(route('tools.expenses.scan-receipt'), [
+                'receipt' => $receipt,
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJson([
+                'text' => "DEPOT 12\nTOTAL 60,900 FCFA",
+                'vendor' => 'Depot 12',
+                'purchase_date' => '2026-06-20',
+                'total_amount' => 60900,
+                'currency' => 'XAF',
+                'confidence' => 96.5,
+            ]);
+
+        Http::assertSent(function (ClientRequest $request): bool {
+            return $request->url() === 'https://api.openai.com/v1/responses'
+                && $request->hasHeader('Authorization', 'Bearer test-key')
+                && $request['model'] === 'gpt-5.4-mini'
+                && $request['store'] === false
+                && data_get($request->data(), 'input.0.content.1.type') === 'input_image'
+                && data_get($request->data(), 'text.format.type') === 'json_schema';
+        });
+    }
+
+    public function test_receipt_scanner_requires_an_openai_api_key(): void
+    {
+        config(['services.openai.api_key' => null]);
+        Http::fake();
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('tools.expenses.scan-receipt'), [
+                'receipt' => UploadedFile::fake()->image('receipt.jpg'),
+            ], ['Accept' => 'application/json'])
+            ->assertStatus(503)
+            ->assertJson([
+                'message' => 'AI receipt scanning is not configured yet.',
+            ]);
+
+        Http::assertNothingSent();
     }
 }

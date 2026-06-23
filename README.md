@@ -6,12 +6,14 @@ SiteTools is a Laravel, React, Inertia.js, and Tailwind CSS app for construction
 
 - Authenticated dashboard with FCFA site spend summaries, category mix, monthly trend, recent purchases, and project budget progress.
 - Expense tracker for catalogue materials, suppliers, payment method, project allocation, and receipt attachments.
-- Browser-side receipt OCR for image receipts using Tesseract.js, with searchable OCR text saved to each expense.
+- OpenAI-powered receipt scanning for images and PDFs, with searchable text and key purchase fields extracted automatically.
 - Filament admin dashboard at `/admin` for managing commonly used materials and default FCFA prices.
 - Project setup for separating site budgets and purchase records.
 - Field calculators for concrete volume, block estimates, paint quantities, and common unit conversions.
 
 ## Local Setup
+
+Copy `.env.example` to `.env` and set `OPENAI_API_KEY` to an API key from the OpenAI API dashboard. `OPENAI_RECEIPT_MODEL` defaults to `gpt-5.4-mini`.
 
 ```bash
 composer install

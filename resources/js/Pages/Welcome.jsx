@@ -107,7 +107,7 @@ export default function Welcome({ auth }) {
                         <Feature
                             icon={ReceiptText}
                             title="Receipt capture"
-                            text="Attach receipts and keep OCR text searchable with every purchase."
+                            text="Attach receipts and keep AI-extracted text searchable with every purchase."
                             accent="emerald"
                         />
                         <Feature

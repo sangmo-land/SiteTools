@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReceiptScanController;
 use App\Http\Controllers\SiteProjectController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/tools/expenses', [ExpenseController::class, 'index'])->name('tools.expenses');
+    Route::post('/tools/expenses/scan-receipt', ReceiptScanController::class)
+        ->middleware('throttle:10,1')
+        ->name('tools.expenses.scan-receipt');
     Route::post('/tools/expenses', [ExpenseController::class, 'store'])->name('tools.expenses.store');
     Route::patch('/tools/expenses/{expense}', [ExpenseController::class, 'update'])->name('tools.expenses.update');
     Route::delete('/tools/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('tools.expenses.destroy');
