@@ -284,7 +284,7 @@ export default function Calculators() {
                     />
                 </ToolPanel>
 
-                <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <section className="panel-card lift-in rounded-lg p-5">
                     <div className="flex items-center gap-3">
                         <span className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-50 text-rose-700">
                             <Ruler className="h-5 w-5" />
@@ -338,7 +338,7 @@ export default function Calculators() {
                         </label>
                     </div>
 
-                    <div className="mt-5 rounded-lg border border-zinc-200 bg-zinc-50 p-5">
+                    <div className="soft-stripes mt-5 rounded-lg border border-rose-200 bg-rose-50 p-5">
                         <div className="flex items-center gap-3">
                             <Calculator className="h-5 w-5 text-rose-700" />
                             <p className="text-3xl font-semibold text-zinc-950">
@@ -360,7 +360,7 @@ function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
     };
 
     return (
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="panel-card lift-in rounded-lg p-5">
             <div className="flex items-center gap-3">
                 <span
                     className={`flex h-10 w-10 items-center justify-center rounded-md ${colorMap[accent]}`}
@@ -381,7 +381,7 @@ function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
                 {result.map(([label, value]) => (
                     <div
                         key={label}
-                        className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+                        className="rounded-lg border border-zinc-200 bg-white/80 p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/40"
                     >
                         <p className="text-sm text-zinc-500">{label}</p>
                         <p className="mt-1 text-2xl font-semibold text-zinc-950">

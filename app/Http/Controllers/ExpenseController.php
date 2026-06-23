@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\Material;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class ExpenseController extends Controller
         'Cement & Concrete',
         'Blocks & Bricks',
         'Steel & Rebar',
+        'Aggregates',
         'Timber & Formwork',
         'Roofing',
         'Plumbing',
@@ -45,7 +47,7 @@ class ExpenseController extends Controller
         $summaryQuery = $this->filteredExpenseQuery($request, $user);
 
         $expenses = $this->filteredExpenseQuery($request, $user)
-            ->with('siteProject')
+            ->with(['material', 'siteProject'])
             ->latest('purchase_date')
             ->latest()
             ->paginate(12)
@@ -65,9 +67,21 @@ class ExpenseController extends Controller
                     'status' => $project->status,
                 ]),
             'categories' => self::CATEGORIES,
+            'materials' => Material::query()
+                ->where('is_active', true)
+                ->orderBy('category')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Material $material) => [
+                    'id' => $material->id,
+                    'name' => $material->name,
+                    'category' => $material->category,
+                    'unit' => $material->unit,
+                    'defaultUnitPrice' => (float) $material->default_unit_price,
+                ]),
             'paymentMethods' => self::PAYMENT_METHODS,
             'statuses' => self::STATUSES,
-            'filters' => $request->only(['search', 'category', 'project', 'status', 'from', 'to']),
+            'filters' => $request->only(['search', 'category', 'material', 'project', 'status', 'from', 'to']),
             'summary' => [
                 'total' => (float) (clone $summaryQuery)->sum('total_amount'),
                 'count' => (clone $summaryQuery)->count(),
@@ -123,10 +137,12 @@ class ExpenseController extends Controller
                     $query->where('title', 'like', "%{$search}%")
                         ->orWhere('vendor', 'like', "%{$search}%")
                         ->orWhere('notes', 'like', "%{$search}%")
-                        ->orWhere('receipt_text', 'like', "%{$search}%");
+                        ->orWhere('receipt_text', 'like', "%{$search}%")
+                        ->orWhereHas('material', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
                 });
             })
             ->when($request->filled('category'), fn (Builder $query) => $query->where('category', $request->string('category')->toString()))
+            ->when($request->filled('material'), fn (Builder $query) => $query->where('material_id', $request->integer('material')))
             ->when($request->filled('project'), fn (Builder $query) => $query->where('site_project_id', $request->integer('project')))
             ->when($request->filled('status'), fn (Builder $query) => $query->where('status', $request->string('status')->toString()))
             ->when($request->filled('from'), fn (Builder $query) => $query->whereDate('purchase_date', '>=', $request->date('from')))
@@ -140,11 +156,13 @@ class ExpenseController extends Controller
                 'nullable',
                 Rule::exists('site_projects', 'id')->where(fn ($query) => $query->where('user_id', $user->id)),
             ],
-            'title' => ['required', 'string', 'max:160'],
+            'material_id' => [
+                'required',
+                Rule::exists('materials', 'id')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'vendor' => ['nullable', 'string', 'max:160'],
-            'category' => ['required', Rule::in(self::CATEGORIES)],
             'purchase_date' => ['required', 'date'],
-            'quantity' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'quantity' => ['nullable', 'numeric', 'min:0', 'max:999999999', 'regex:/^\d+(\.\d)?$/'],
             'unit' => ['nullable', 'string', 'max:30'],
             'unit_cost' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'total_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
@@ -159,8 +177,9 @@ class ExpenseController extends Controller
 
     private function expenseAttributes(array $data, Request $request, User $user, ?Expense $expense = null): array
     {
+        $material = Material::query()->findOrFail($data['material_id']);
         $quantity = $this->nullableFloat($data['quantity'] ?? null);
-        $unitCost = $this->nullableFloat($data['unit_cost'] ?? null);
+        $unitCost = $this->nullableFloat($data['unit_cost'] ?? null) ?? (float) $material->default_unit_price;
         $total = $this->nullableFloat($data['total_amount'] ?? null);
 
         if ($total === null && $quantity !== null && $unitCost !== null) {
@@ -170,12 +189,13 @@ class ExpenseController extends Controller
         $attributes = [
             'user_id' => $user->id,
             'site_project_id' => $data['site_project_id'] ?? null,
-            'title' => $data['title'],
+            'material_id' => $material->id,
+            'title' => $material->name,
             'vendor' => $data['vendor'] ?? null,
-            'category' => $data['category'],
+            'category' => $material->category,
             'purchase_date' => $data['purchase_date'],
             'quantity' => $quantity,
-            'unit' => $data['unit'] ?? null,
+            'unit' => $data['unit'] ?? $material->unit,
             'unit_cost' => $unitCost,
             'total_amount' => $total ?? 0,
             'payment_method' => $data['payment_method'],
@@ -203,6 +223,13 @@ class ExpenseController extends Controller
         return [
             'id' => $expense->id,
             'title' => $expense->title,
+            'material' => $expense->material ? [
+                'id' => $expense->material->id,
+                'name' => $expense->material->name,
+                'category' => $expense->material->category,
+                'unit' => $expense->material->unit,
+                'defaultUnitPrice' => (float) $expense->material->default_unit_price,
+            ] : null,
             'vendor' => $expense->vendor,
             'category' => $expense->category,
             'purchaseDate' => $expense->purchase_date?->toDateString(),

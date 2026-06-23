@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 
 const formatMoney = (value) =>
-    new Intl.NumberFormat('en-NG', {
+    new Intl.NumberFormat('fr-CM', {
         style: 'currency',
-        currency: 'NGN',
+        currency: 'XAF',
         maximumFractionDigits: 0,
     }).format(Number(value || 0));
 
@@ -27,6 +27,24 @@ const statusLabels = {
     pending: 'Pending',
     reconciled: 'Reconciled',
 };
+
+const chartColors = [
+    'bg-emerald-500',
+    'bg-cyan-500',
+    'bg-amber-500',
+    'bg-rose-500',
+    'bg-lime-500',
+    'bg-sky-500',
+];
+
+const categoryColors = [
+    'bg-emerald-500',
+    'bg-cyan-500',
+    'bg-amber-500',
+    'bg-rose-500',
+    'bg-lime-500',
+    'bg-sky-500',
+];
 
 export default function Dashboard({
     stats,
@@ -56,14 +74,14 @@ export default function Dashboard({
                     <div className="flex flex-wrap gap-2">
                         <Link
                             href={route('tools.expenses')}
-                            className="inline-flex items-center gap-2 rounded-md bg-zinc-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                         >
                             <ReceiptText className="h-4 w-4" />
                             Add expense
                         </Link>
                         <Link
                             href={route('tools.calculators')}
-                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
                         >
                             <Calculator className="h-4 w-4" />
                             Calculators
@@ -101,8 +119,28 @@ export default function Dashboard({
                 />
             </div>
 
+            <section className="panel-card lift-in mt-6 overflow-hidden rounded-lg p-0">
+                <div className="grid gap-0 md:grid-cols-[1.2fr_0.8fr]">
+                    <div className="bg-zinc-950 p-5 text-white">
+                        <p className="text-sm font-semibold text-emerald-300">
+                            Live site picture
+                        </p>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-200">
+                            Your spend, receipts, and project budgets now sit
+                            on one colorful operations layer, so the page feels
+                            closer to a control room than a static ledger.
+                        </p>
+                    </div>
+                    <div className="soft-stripes grid grid-cols-3 gap-3 bg-emerald-600 p-5 text-white">
+                        <MiniMetric label="Projects" value={stats.projectCount} />
+                        <MiniMetric label="Open" value={stats.openProjectCount} />
+                        <MiniMetric label="Receipts" value={stats.receiptCount} />
+                    </div>
+                </div>
+            </section>
+
             <div className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-                <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <section className="panel-card lift-in rounded-lg p-5">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <h2 className="text-base font-semibold text-zinc-950">
@@ -115,14 +153,15 @@ export default function Dashboard({
                         <TrendingUp className="h-5 w-5 text-emerald-700" />
                     </div>
                     <div className="mt-6 grid h-56 grid-cols-6 items-end gap-3">
-                        {monthlyTrend.map((month) => (
+                        {monthlyTrend.map((month, index) => (
                             <div
                                 key={month.label}
                                 className="flex h-full flex-col justify-end gap-2"
+                                style={{ animationDelay: `${index * 60}ms` }}
                             >
-                                <div className="flex flex-1 items-end rounded-md bg-zinc-100">
+                                <div className="flex flex-1 items-end rounded-md bg-zinc-100 p-1">
                                     <div
-                                        className="w-full rounded-md bg-emerald-600"
+                                        className={`meter-fill w-full rounded-md ${chartColors[index % chartColors.length]}`}
                                         style={{
                                             height: `${Math.max((month.total / maxMonth) * 100, month.total ? 8 : 2)}%`,
                                         }}
@@ -141,7 +180,7 @@ export default function Dashboard({
                     </div>
                 </section>
 
-                <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <section className="panel-card lift-in rounded-lg p-5">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-base font-semibold text-zinc-950">
@@ -155,7 +194,7 @@ export default function Dashboard({
                     </div>
                     <div className="mt-5 space-y-4">
                         {categoryTotals.length ? (
-                            categoryTotals.map((category) => (
+                            categoryTotals.map((category, index) => (
                                 <div key={category.category}>
                                     <div className="flex items-center justify-between gap-3 text-sm">
                                         <span className="font-medium text-zinc-800">
@@ -167,7 +206,7 @@ export default function Dashboard({
                                     </div>
                                     <div className="mt-2 h-2 rounded-md bg-zinc-100">
                                         <div
-                                            className="h-2 rounded-md bg-cyan-600"
+                                            className={`meter-fill h-2 rounded-md ${categoryColors[index % categoryColors.length]}`}
                                             style={{
                                                 width: `${Math.max((category.total / maxCategory) * 100, 5)}%`,
                                             }}
@@ -183,7 +222,7 @@ export default function Dashboard({
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <section className="panel-card lift-in rounded-lg p-5">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <h2 className="text-base font-semibold text-zinc-950">
@@ -210,7 +249,7 @@ export default function Dashboard({
                                 return (
                                     <div
                                         key={project.id}
-                                        className="rounded-lg border border-zinc-200 p-4"
+                                        className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:bg-amber-50/40"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div>
@@ -238,7 +277,7 @@ export default function Dashboard({
                                         </div>
                                         <div className="mt-3 h-2 rounded-md bg-zinc-100">
                                             <div
-                                                className="h-2 rounded-md bg-amber-500"
+                                                className="meter-fill h-2 rounded-md bg-amber-500"
                                                 style={{
                                                     width: `${hasBudget ? Math.max(progress, 3) : 0}%`,
                                                 }}
@@ -253,7 +292,7 @@ export default function Dashboard({
                     </div>
                 </section>
 
-                <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <section className="panel-card lift-in rounded-lg p-5">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <h2 className="text-base font-semibold text-zinc-950">
@@ -277,7 +316,7 @@ export default function Dashboard({
                                 {recentExpenses.map((expense) => (
                                     <div
                                         key={expense.id}
-                                        className="grid gap-3 p-4 sm:grid-cols-[1fr_auto]"
+                                        className="grid gap-3 p-4 transition hover:bg-cyan-50/50 sm:grid-cols-[1fr_auto]"
                                     >
                                         <div>
                                             <p className="font-semibold text-zinc-950">
@@ -315,17 +354,36 @@ export default function Dashboard({
 
 function StatCard({ label, value, icon: Icon, accent }) {
     const colorMap = {
-        emerald: 'bg-emerald-50 text-emerald-700',
-        cyan: 'bg-cyan-50 text-cyan-700',
-        amber: 'bg-amber-50 text-amber-700',
-        rose: 'bg-rose-50 text-rose-700',
+        emerald: {
+            card: 'border-emerald-200 bg-emerald-50/70',
+            icon: 'bg-emerald-600 text-white shadow-emerald-700/20',
+            line: 'bg-emerald-500',
+        },
+        cyan: {
+            card: 'border-cyan-200 bg-cyan-50/70',
+            icon: 'bg-cyan-600 text-white shadow-cyan-700/20',
+            line: 'bg-cyan-500',
+        },
+        amber: {
+            card: 'border-amber-200 bg-amber-50/70',
+            icon: 'bg-amber-500 text-white shadow-amber-700/20',
+            line: 'bg-amber-500',
+        },
+        rose: {
+            card: 'border-rose-200 bg-rose-50/70',
+            icon: 'bg-rose-500 text-white shadow-rose-700/20',
+            line: 'bg-rose-500',
+        },
     };
+    const colors = colorMap[accent];
 
     return (
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section
+            className={`lift-in overflow-hidden rounded-lg border p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${colors.card}`}
+        >
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <p className="text-sm font-medium text-zinc-500">
+                    <p className="text-sm font-medium text-zinc-600">
                         {label}
                     </p>
                     <p className="mt-2 text-2xl font-semibold text-zinc-950">
@@ -333,12 +391,24 @@ function StatCard({ label, value, icon: Icon, accent }) {
                     </p>
                 </div>
                 <span
-                    className={`flex h-11 w-11 items-center justify-center rounded-md ${colorMap[accent]}`}
+                    className={`flex h-11 w-11 items-center justify-center rounded-md shadow-lg ${colors.icon}`}
                 >
                     <Icon className="h-5 w-5" />
                 </span>
             </div>
+            <div className="mt-5 h-1 rounded-md bg-white/80">
+                <div className="workline h-1 rounded-md" />
+            </div>
         </section>
+    );
+}
+
+function MiniMetric({ label, value }) {
+    return (
+        <div className="rounded-md border border-white/20 bg-white/15 p-3 backdrop-blur">
+            <p className="text-xs font-medium text-white/75">{label}</p>
+            <p className="mt-1 text-2xl font-semibold">{value}</p>
+        </div>
     );
 }
 

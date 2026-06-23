@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Expense;
+use App\Models\Material;
 use App\Models\SiteProject;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,17 +46,23 @@ class SiteToolsTest extends TestCase
             ->assertRedirect();
 
         $project = SiteProject::where('user_id', $user->id)->firstOrFail();
+        $material = Material::create([
+            'name' => 'Cement 42.5R 50kg',
+            'category' => 'Cement & Concrete',
+            'unit' => 'bag',
+            'default_unit_price' => 5800,
+            'is_active' => true,
+        ]);
 
         $this->actingAs($user)
             ->post(route('tools.expenses.store'), [
                 'site_project_id' => $project->id,
-                'title' => 'Cement',
+                'material_id' => $material->id,
                 'vendor' => 'Depot 12',
-                'category' => 'Cement & Concrete',
                 'purchase_date' => now()->toDateString(),
-                'quantity' => 10,
-                'unit' => 'bags',
-                'unit_cost' => 9500,
+                'quantity' => 10.5,
+                'unit' => 'bag',
+                'unit_cost' => 5800,
                 'payment_method' => 'POS',
                 'status' => 'paid',
             ])
@@ -65,17 +72,26 @@ class SiteToolsTest extends TestCase
         $this->assertDatabaseHas('expenses', [
             'user_id' => $user->id,
             'site_project_id' => $project->id,
-            'title' => 'Cement',
-            'total_amount' => 95000,
+            'material_id' => $material->id,
+            'title' => 'Cement 42.5R 50kg',
+            'total_amount' => 60900,
         ]);
     }
 
     public function test_expense_tracker_and_calculators_render(): void
     {
         $user = User::factory()->create();
+        $material = Material::create([
+            'name' => 'PVC pipe 110mm',
+            'category' => 'Plumbing',
+            'unit' => 'length',
+            'default_unit_price' => 6500,
+            'is_active' => true,
+        ]);
 
         Expense::create([
             'user_id' => $user->id,
+            'material_id' => $material->id,
             'title' => 'PVC pipes',
             'category' => 'Plumbing',
             'purchase_date' => now()->toDateString(),
@@ -91,6 +107,7 @@ class SiteToolsTest extends TestCase
                 ->component('Tools/Expenses')
                 ->has('expenses.data', 1)
                 ->has('categories')
+                ->has('materials', 1)
                 ->has('summary'));
 
         $this->actingAs($user)

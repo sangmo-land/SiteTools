@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Expense;
+use App\Models\Material;
 use App\Models\SiteProject;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -22,12 +23,37 @@ class DatabaseSeeder extends Seeder
         $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'is_admin' => true,
+        ]);
+
+        $materials = collect([
+            ['Cement 42.5R 50kg', 'Cement & Concrete', 'bag', 5800],
+            ['River sand', 'Aggregates', 'ton', 18000],
+            ['Gravel 5/15', 'Aggregates', 'ton', 21000],
+            ['Concrete block 15cm', 'Blocks & Bricks', 'piece', 450],
+            ['Concrete block 20cm', 'Blocks & Bricks', 'piece', 550],
+            ['Rebar 8mm', 'Steel & Rebar', 'length', 2500],
+            ['Rebar 12mm', 'Steel & Rebar', 'length', 4200],
+            ['Timber plank 4m', 'Timber & Formwork', 'piece', 3500],
+            ['PVC pipe 110mm', 'Plumbing', 'length', 6500],
+            ['Electrical cable 2.5mm', 'Electrical', 'roll', 24500],
+            ['Emulsion paint 20L', 'Paint & Finishes', 'bucket', 32000],
+            ['Nails 50kg carton', 'Tools & Equipment', 'carton', 28500],
+            ['Truck delivery', 'Transport', 'trip', 45000],
+        ])->mapWithKeys(fn (array $item) => [
+            $item[0] => Material::create([
+                'name' => $item[0],
+                'category' => $item[1],
+                'unit' => $item[2],
+                'default_unit_price' => $item[3],
+                'is_active' => true,
+            ]),
         ]);
 
         $duplex = SiteProject::create([
             'user_id' => $user->id,
-            'name' => 'Lekki duplex phase 1',
-            'location' => 'Lekki, Lagos',
+            'name' => 'Bonamoussadi villa phase 1',
+            'location' => 'Douala, Littoral',
             'client_name' => 'Internal build',
             'budget' => 18500000,
             'start_date' => now()->subMonths(2)->toDateString(),
@@ -36,8 +62,8 @@ class DatabaseSeeder extends Seeder
 
         $renovation = SiteProject::create([
             'user_id' => $user->id,
-            'name' => 'Ikoyi apartment renovation',
-            'location' => 'Ikoyi, Lagos',
+            'name' => 'Bastos apartment renovation',
+            'location' => 'Yaounde, Centre',
             'client_name' => 'Private client',
             'budget' => 7200000,
             'start_date' => now()->subMonth()->toDateString(),
@@ -45,25 +71,27 @@ class DatabaseSeeder extends Seeder
         ]);
 
         collect([
-            [$duplex, 'Cement delivery', 'Dangote depot', 'Cement & Concrete', 120, 'bags', 9200, 'POS', 'paid', now()->subDays(3)],
-            [$duplex, 'Sharp sand', 'Ajah material yard', 'Cement & Concrete', 18, 'tons', 18500, 'Bank transfer', 'paid', now()->subDays(8)],
-            [$duplex, '16mm rebar', 'Steel hub', 'Steel & Rebar', 72, 'lengths', 7800, 'POS', 'pending', now()->subDays(12)],
-            [$renovation, 'PVC plumbing fittings', 'Mainland pipes', 'Plumbing', 1, 'lot', 285000, 'Cash', 'paid', now()->subDays(5)],
-            [$renovation, 'Emulsion paint', 'Color house', 'Paint & Finishes', 12, 'buckets', 33500, 'POS', 'reconciled', now()->subDays(15)],
-        ])->each(function (array $item) use ($user) {
-            [$project, $title, $vendor, $category, $quantity, $unit, $unitCost, $payment, $status, $date] = $item;
+            [$duplex, 'Cement 42.5R 50kg', 'Quincaillerie Akwa', 120.0, 'POS', 'paid', now()->subDays(3)],
+            [$duplex, 'River sand', 'Depot Makepe', 18.5, 'Bank transfer', 'paid', now()->subDays(8)],
+            [$duplex, 'Rebar 12mm', 'Acier Douala', 72.0, 'POS', 'pending', now()->subDays(12)],
+            [$renovation, 'PVC pipe 110mm', 'Plomberie Mvog-Ada', 16.0, 'Cash', 'paid', now()->subDays(5)],
+            [$renovation, 'Emulsion paint 20L', 'Peinture Bastos', 12.0, 'POS', 'reconciled', now()->subDays(15)],
+        ])->each(function (array $item) use ($user, $materials) {
+            [$project, $materialName, $vendor, $quantity, $payment, $status, $date] = $item;
+            $material = $materials[$materialName];
 
             Expense::create([
                 'user_id' => $user->id,
                 'site_project_id' => $project->id,
-                'title' => $title,
+                'material_id' => $material->id,
+                'title' => $material->name,
                 'vendor' => $vendor,
-                'category' => $category,
+                'category' => $material->category,
                 'purchase_date' => $date->toDateString(),
                 'quantity' => $quantity,
-                'unit' => $unit,
-                'unit_cost' => $unitCost,
-                'total_amount' => $quantity * $unitCost,
+                'unit' => $material->unit,
+                'unit_cost' => $material->default_unit_price,
+                'total_amount' => $quantity * $material->default_unit_price,
                 'payment_method' => $payment,
                 'status' => $status,
                 'notes' => 'Demo record',

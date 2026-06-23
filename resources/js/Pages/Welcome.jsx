@@ -144,7 +144,7 @@ function Feature({ icon: Icon, title, text, accent }) {
     };
 
     return (
-        <article className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <article className="panel-card lift-in rounded-lg p-5">
             <span
                 className={`flex h-10 w-10 items-center justify-center rounded-md ${colorMap[accent]}`}
             >

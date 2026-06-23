@@ -1,3 +1,108 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        background: #f8fafc;
+        color: #18181b;
+    }
+}
+
+@layer components {
+    .site-app-bg {
+        background:
+            linear-gradient(115deg, rgba(16, 185, 129, 0.12), transparent 28rem),
+            linear-gradient(245deg, rgba(245, 158, 11, 0.1), transparent 24rem),
+            repeating-linear-gradient(
+                135deg,
+                rgba(24, 24, 27, 0.035) 0,
+                rgba(24, 24, 27, 0.035) 1px,
+                transparent 1px,
+                transparent 18px
+            ),
+            #f8fafc;
+    }
+
+    .workline {
+        background: linear-gradient(
+            90deg,
+            #10b981,
+            #06b6d4,
+            #f59e0b,
+            #f43f5e,
+            #10b981
+        );
+        background-size: 220% 100%;
+        animation: workline-pan 12s linear infinite;
+    }
+
+    .panel-card {
+        border: 1px solid rgba(212, 212, 216, 0.9);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.9)),
+            #ffffff;
+        box-shadow: 0 18px 50px rgba(24, 24, 27, 0.06);
+        transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            border-color 180ms ease;
+    }
+
+    .panel-card:hover {
+        border-color: rgba(16, 185, 129, 0.35);
+        box-shadow: 0 22px 70px rgba(24, 24, 27, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .lift-in {
+        animation: lift-in 520ms ease both;
+    }
+
+    .soft-stripes {
+        background-image: repeating-linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.18) 0,
+            rgba(255, 255, 255, 0.18) 1px,
+            transparent 1px,
+            transparent 10px
+        );
+    }
+
+    .meter-fill {
+        animation: meter-fill 760ms ease both;
+        transform-origin: left;
+    }
+}
+
+@keyframes lift-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes meter-fill {
+    from {
+        transform: scaleX(0.08);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes workline-pan {
+    from {
+        background-position: 0% 50%;
+    }
+
+    to {
+        background-position: 220% 50%;
+    }
+}

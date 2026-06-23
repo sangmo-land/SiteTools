@@ -4,9 +4,10 @@ SiteTools is a Laravel, React, Inertia.js, and Tailwind CSS app for construction
 
 ## Features
 
-- Authenticated dashboard with site spend summaries, category mix, monthly trend, recent purchases, and project budget progress.
-- Expense tracker for materials, suppliers, payment method, project allocation, and receipt attachments.
+- Authenticated dashboard with FCFA site spend summaries, category mix, monthly trend, recent purchases, and project budget progress.
+- Expense tracker for catalogue materials, suppliers, payment method, project allocation, and receipt attachments.
 - Browser-side receipt OCR for image receipts using Tesseract.js, with searchable OCR text saved to each expense.
+- Filament admin dashboard at `/admin` for managing commonly used materials and default FCFA prices.
 - Project setup for separating site budgets and purchase records.
 - Field calculators for concrete volume, block estimates, paint quantities, and common unit conversions.
 
@@ -15,6 +16,7 @@ SiteTools is a Laravel, React, Inertia.js, and Tailwind CSS app for construction
 ```bash
 composer install
 npm install
+mysql -u root -e "CREATE DATABASE site_tools CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 php artisan migrate:fresh --seed
 php artisan storage:link
 npm run build
@@ -27,6 +29,8 @@ The seeded demo account is:
 Email: test@example.com
 Password: password
 ```
+
+Use the same account at `/admin` to manage the materials dropdown.
 
 ## Development
 

@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('site_project_id')->nullable()->constrained('site_projects')->nullOnDelete();
+            $table->foreignId('material_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
             $table->string('vendor')->nullable();
             $table->string('category', 80)->index();
             $table->date('purchase_date')->index();
-            $table->decimal('quantity', 12, 3)->nullable();
+            $table->decimal('quantity', 12, 1)->nullable();
             $table->string('unit', 30)->nullable();
             $table->decimal('unit_cost', 14, 2)->nullable();
             $table->decimal('total_amount', 14, 2)->default(0);

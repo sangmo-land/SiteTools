@@ -13,6 +13,7 @@ class Expense extends Model
     protected $fillable = [
         'user_id',
         'site_project_id',
+        'material_id',
         'title',
         'vendor',
         'category',
@@ -34,7 +35,7 @@ class Expense extends Model
     {
         return [
             'purchase_date' => 'date',
-            'quantity' => 'decimal:3',
+            'quantity' => 'decimal:1',
             'unit_cost' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'receipt_confidence' => 'decimal:2',
@@ -49,5 +50,10 @@ class Expense extends Model
     public function siteProject(): BelongsTo
     {
         return $this->belongsTo(SiteProject::class);
+    }
+
+    public function material(): BelongsTo
+    {
+        return $this->belongsTo(Material::class);
     }
 }

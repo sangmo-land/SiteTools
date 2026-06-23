@@ -42,18 +42,19 @@ export default function AuthenticatedLayout({ header, children }) {
     ];
 
     return (
-        <div className="min-h-screen bg-zinc-50 text-zinc-950">
-            <nav className="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 backdrop-blur">
+        <div className="site-app-bg min-h-screen text-zinc-950">
+            <nav className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 shadow-sm backdrop-blur-xl">
+                <div className="workline h-1" />
                 <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-8">
                         <Link
                             href={route('dashboard')}
                             className="flex items-center gap-3 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                         >
-                            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-950 text-white">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-600 text-white shadow-lg shadow-emerald-700/20 ring-1 ring-emerald-300/60">
                                 <Construction className="h-5 w-5" />
                             </span>
-                            <span className="text-lg font-semibold">
+                            <span className="text-lg font-semibold text-zinc-950">
                                 SiteTools
                             </span>
                         </Link>
@@ -70,7 +71,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             <Dropdown.Trigger>
                                 <button
                                     type="button"
-                                    className="inline-flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                                    className="inline-flex items-center gap-2 rounded-md border border-zinc-200 bg-white/80 px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                                 >
                                     <UserRound className="h-4 w-4" />
                                     <span>{user.name}</span>
@@ -98,7 +99,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         onClick={() =>
                             setShowingNavigationDropdown((current) => !current)
                         }
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-200 text-zinc-700 transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 md:hidden"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-200 bg-white/80 text-zinc-700 shadow-sm transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 md:hidden"
                         aria-label="Toggle navigation"
                     >
                         {showingNavigationDropdown ? (
@@ -110,7 +111,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
 
                 {showingNavigationDropdown && (
-                    <div className="border-t border-zinc-200 bg-white px-4 py-3 md:hidden">
+                    <div className="border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
                         <div className="space-y-1">
                             {navItems.map((item) => (
                                 <MobileNavItem key={item.name} {...item} />
@@ -146,7 +147,7 @@ export default function AuthenticatedLayout({ header, children }) {
             </nav>
 
             {flash?.status && (
-                <div className="border-b border-emerald-200 bg-emerald-50">
+                <div className="border-b border-emerald-200 bg-emerald-50/95">
                     <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 text-sm font-medium text-emerald-800 sm:px-6 lg:px-8">
                         <ClipboardList className="h-4 w-4" />
                         {flash.status}
@@ -155,7 +156,7 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             {header && (
-                <header className="border-b border-zinc-200 bg-white">
+                <header className="border-b border-zinc-200 bg-white/80 backdrop-blur">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>
@@ -175,8 +176,8 @@ function DesktopNavItem({ name, href, active, icon: Icon }) {
             href={href}
             className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
                 active
-                    ? 'bg-emerald-50 text-emerald-800'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-700/20'
+                    : 'text-zinc-600 hover:bg-amber-50 hover:text-zinc-950'
             }`}
         >
             <Icon className="h-4 w-4" />

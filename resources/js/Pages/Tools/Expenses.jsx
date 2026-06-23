@@ -9,6 +9,7 @@ import {
     FileImage,
     Filter,
     FolderPlus,
+    PackageSearch,
     Plus,
     ReceiptText,
     Search,
@@ -16,15 +17,15 @@ import {
     Upload,
     WalletCards,
 } from 'lucide-react';
-import { createWorker } from 'tesseract.js';
 import { useMemo, useRef, useState } from 'react';
+import { createWorker } from 'tesseract.js';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 const formatMoney = (value) =>
-    new Intl.NumberFormat('en-NG', {
+    new Intl.NumberFormat('fr-CM', {
         style: 'currency',
-        currency: 'NGN',
+        currency: 'XAF',
         maximumFractionDigits: 0,
     }).format(Number(value || 0));
 
@@ -42,6 +43,7 @@ export default function Expenses({
     expenses,
     projects,
     categories,
+    materials,
     paymentMethods,
     statuses,
     filters,
@@ -57,22 +59,23 @@ export default function Expenses({
     const [filterData, setFilterData] = useState({
         search: filters.search || '',
         category: filters.category || '',
+        material: filters.material || '',
         project: filters.project || '',
         status: filters.status || '',
         from: filters.from || '',
         to: filters.to || '',
     });
 
+    const firstMaterial = materials[0] || null;
     const defaultExpenseForm = useMemo(
         () => ({
             site_project_id: '',
-            title: '',
+            material_id: firstMaterial?.id || '',
             vendor: '',
-            category: categories[0] || 'Other',
             purchase_date: today(),
             quantity: '',
-            unit: '',
-            unit_cost: '',
+            unit: firstMaterial?.unit || '',
+            unit_cost: firstMaterial?.defaultUnitPrice || '',
             total_amount: '',
             payment_method: paymentMethods.includes('POS')
                 ? 'POS'
@@ -83,7 +86,7 @@ export default function Expenses({
             receipt_confidence: '',
             notes: '',
         }),
-        [categories, paymentMethods],
+        [firstMaterial, paymentMethods],
     );
 
     const expenseForm = useForm(defaultExpenseForm);
@@ -97,6 +100,11 @@ export default function Expenses({
         notes: '',
     });
 
+    const selectedMaterial =
+        materials.find(
+            (material) =>
+                String(material.id) === String(expenseForm.data.material_id),
+        ) || null;
     const computedTotal =
         expenseForm.data.total_amount === '' &&
         expenseForm.data.quantity !== '' &&
@@ -154,6 +162,7 @@ export default function Expenses({
         const cleared = {
             search: '',
             category: '',
+            material: '',
             project: '',
             status: '',
             from: '',
@@ -162,6 +171,20 @@ export default function Expenses({
 
         setFilterData(cleared);
         router.get(route('tools.expenses'), {}, { replace: true });
+    };
+
+    const selectMaterial = (materialId) => {
+        const material = materials.find(
+            (item) => String(item.id) === String(materialId),
+        );
+
+        expenseForm.setData({
+            ...expenseForm.data,
+            material_id: materialId,
+            unit: material?.unit || '',
+            unit_cost: material?.defaultUnitPrice || '',
+            total_amount: '',
+        });
     };
 
     const handleReceiptChange = async (event) => {
@@ -210,13 +233,22 @@ export default function Expenses({
                             Site purchases and receipts
                         </h1>
                     </div>
-                    <Link
-                        href={route('tools.calculators')}
-                        className="inline-flex w-fit items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                    >
-                        <WalletCards className="h-4 w-4" />
-                        Open calculators
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                        <a
+                            href="/admin/materials"
+                            className="inline-flex items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-900 shadow-sm transition hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+                        >
+                            <PackageSearch className="h-4 w-4" />
+                            Manage materials
+                        </a>
+                        <Link
+                            href={route('tools.calculators')}
+                            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        >
+                            <WalletCards className="h-4 w-4" />
+                            Open calculators
+                        </Link>
+                    </div>
                 </div>
             }
         >
@@ -251,9 +283,9 @@ export default function Expenses({
 
             <form
                 onSubmit={applyFilters}
-                className="mt-6 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
+                className="panel-card lift-in mt-6 rounded-lg p-4"
             >
-                <div className="grid gap-3 lg:grid-cols-[1.35fr_repeat(5,minmax(0,1fr))_auto]">
+                <div className="grid gap-3 lg:grid-cols-[1.35fr_repeat(6,minmax(0,1fr))_auto]">
                     <FieldShell icon={Search}>
                         <input
                             value={filterData.search}
@@ -264,7 +296,7 @@ export default function Expenses({
                                 }))
                             }
                             className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                            placeholder="Search vendor, item, receipt text"
+                            placeholder="Search vendor, material, receipt text"
                             type="search"
                         />
                     </FieldShell>
@@ -282,6 +314,23 @@ export default function Expenses({
                         {categories.map((category) => (
                             <option key={category} value={category}>
                                 {category}
+                            </option>
+                        ))}
+                    </select>
+                    <select
+                        value={filterData.material}
+                        onChange={(event) =>
+                            setFilterData((current) => ({
+                                ...current,
+                                material: event.target.value,
+                            }))
+                        }
+                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    >
+                        <option value="">All materials</option>
+                        {materials.map((material) => (
+                            <option key={material.id} value={material.id}>
+                                {material.name}
                             </option>
                         ))}
                     </select>
@@ -344,7 +393,7 @@ export default function Expenses({
                     <div className="flex gap-2">
                         <button
                             type="submit"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-zinc-950 text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-emerald-600 text-white shadow-md shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                             aria-label="Apply filters"
                             title="Apply filters"
                         >
@@ -353,7 +402,7 @@ export default function Expenses({
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="rounded-md border border-zinc-300 px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                            className="rounded-md border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
                         >
                             Clear
                         </button>
@@ -362,7 +411,7 @@ export default function Expenses({
             </form>
 
             <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.78fr]">
-                <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <section className="panel-card lift-in rounded-lg p-5">
                     <div className="flex items-center gap-3">
                         <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
                             <Plus className="h-5 w-5" />
@@ -372,28 +421,49 @@ export default function Expenses({
                                 Record purchase
                             </h2>
                             <p className="text-sm text-zinc-500">
-                                Materials, supplier, payment, and receipt
+                                Select a catalogue material, supplier, payment,
+                                and receipt.
                             </p>
                         </div>
                     </div>
+
+                    {!materials.length && (
+                        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                            Add materials in the Filament admin dashboard before
+                            recording expenses.
+                        </div>
+                    )}
 
                     <form onSubmit={submitExpense} className="mt-5 space-y-5">
                         <div className="grid gap-4 md:grid-cols-2">
                             <FormField
                                 label="Item or material"
-                                error={expenseForm.errors.title}
+                                error={expenseForm.errors.material_id}
                             >
-                                <input
-                                    value={expenseForm.data.title}
+                                <select
+                                    value={expenseForm.data.material_id}
                                     onChange={(event) =>
-                                        expenseForm.setData(
-                                            'title',
-                                            event.target.value,
-                                        )
+                                        selectMaterial(event.target.value)
                                     }
                                     className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                    placeholder="Cement, blocks, pipes"
-                                />
+                                    disabled={!materials.length}
+                                >
+                                    <option value="">
+                                        Select a material
+                                    </option>
+                                    {materials.map((material) => (
+                                        <option
+                                            key={material.id}
+                                            value={material.id}
+                                        >
+                                            {material.name} -{' '}
+                                            {formatMoney(
+                                                material.defaultUnitPrice,
+                                            )}
+                                            /{material.unit}
+                                        </option>
+                                    ))}
+                                </select>
                             </FormField>
                             <FormField
                                 label="Vendor"
@@ -437,30 +507,6 @@ export default function Expenses({
                                 </select>
                             </FormField>
                             <FormField
-                                label="Category"
-                                error={expenseForm.errors.category}
-                            >
-                                <select
-                                    value={expenseForm.data.category}
-                                    onChange={(event) =>
-                                        expenseForm.setData(
-                                            'category',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                >
-                                    {categories.map((category) => (
-                                        <option
-                                            key={category}
-                                            value={category}
-                                        >
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            </FormField>
-                            <FormField
                                 label="Purchase date"
                                 error={expenseForm.errors.purchase_date}
                             >
@@ -497,87 +543,6 @@ export default function Expenses({
                                     ))}
                                 </select>
                             </FormField>
-                        </div>
-
-                        <div className="grid gap-4 md:grid-cols-4">
-                            <FormField
-                                label="Quantity"
-                                error={expenseForm.errors.quantity}
-                            >
-                                <input
-                                    value={expenseForm.data.quantity}
-                                    onChange={(event) =>
-                                        expenseForm.setData(
-                                            'quantity',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                    min="0"
-                                    step="0.001"
-                                    type="number"
-                                />
-                            </FormField>
-                            <FormField
-                                label="Unit"
-                                error={expenseForm.errors.unit}
-                            >
-                                <input
-                                    value={expenseForm.data.unit}
-                                    onChange={(event) =>
-                                        expenseForm.setData(
-                                            'unit',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                    placeholder="bags, pcs, tons"
-                                />
-                            </FormField>
-                            <FormField
-                                label="Unit cost"
-                                error={expenseForm.errors.unit_cost}
-                            >
-                                <input
-                                    value={expenseForm.data.unit_cost}
-                                    onChange={(event) =>
-                                        expenseForm.setData(
-                                            'unit_cost',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                    min="0"
-                                    step="0.01"
-                                    type="number"
-                                />
-                            </FormField>
-                            <FormField
-                                label="Total"
-                                error={expenseForm.errors.total_amount}
-                            >
-                                <input
-                                    value={expenseForm.data.total_amount}
-                                    onChange={(event) =>
-                                        expenseForm.setData(
-                                            'total_amount',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                    min="0"
-                                    step="0.01"
-                                    type="number"
-                                    placeholder={
-                                        computedTotal
-                                            ? formatMoney(computedTotal)
-                                            : 'Auto or manual'
-                                    }
-                                />
-                            </FormField>
-                        </div>
-
-                        <div className="grid gap-4 md:grid-cols-[0.65fr_1fr]">
                             <FormField
                                 label="Status"
                                 error={expenseForm.errors.status}
@@ -599,28 +564,125 @@ export default function Expenses({
                                     ))}
                                 </select>
                             </FormField>
+                        </div>
+
+                        {selectedMaterial && (
+                            <div className="soft-stripes grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm md:grid-cols-3">
+                                <MaterialMeta
+                                    label="Category"
+                                    value={selectedMaterial.category}
+                                />
+                                <MaterialMeta
+                                    label="Default unit"
+                                    value={selectedMaterial.unit}
+                                />
+                                <MaterialMeta
+                                    label="Default price"
+                                    value={`${formatMoney(selectedMaterial.defaultUnitPrice)} / ${selectedMaterial.unit}`}
+                                />
+                            </div>
+                        )}
+
+                        <div className="grid gap-4 md:grid-cols-4">
                             <FormField
-                                label="Receipt"
-                                error={expenseForm.errors.receipt}
+                                label="Quantity"
+                                error={expenseForm.errors.quantity}
                             >
-                                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-zinc-300 px-3 py-2 text-sm text-zinc-600 transition hover:border-emerald-400 hover:bg-emerald-50">
-                                    <span className="flex items-center gap-2 truncate">
-                                        <Upload className="h-4 w-4 shrink-0" />
-                                        <span className="truncate">
-                                            {expenseForm.data.receipt?.name ||
-                                                'Attach receipt image or PDF'}
-                                        </span>
-                                    </span>
-                                    <input
-                                        ref={fileInputRef}
-                                        onChange={handleReceiptChange}
-                                        className="sr-only"
-                                        type="file"
-                                        accept="image/*,.pdf"
-                                    />
-                                </label>
+                                <input
+                                    value={expenseForm.data.quantity}
+                                    onChange={(event) =>
+                                        expenseForm.setData(
+                                            'quantity',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    min="0"
+                                    step="0.1"
+                                    type="number"
+                                    placeholder="0.0"
+                                />
+                            </FormField>
+                            <FormField
+                                label="Unit"
+                                error={expenseForm.errors.unit}
+                            >
+                                <input
+                                    value={expenseForm.data.unit}
+                                    onChange={(event) =>
+                                        expenseForm.setData(
+                                            'unit',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    placeholder="bags, pcs, tons"
+                                />
+                            </FormField>
+                            <FormField
+                                label="Unit price (FCFA)"
+                                error={expenseForm.errors.unit_cost}
+                            >
+                                <input
+                                    value={expenseForm.data.unit_cost}
+                                    onChange={(event) =>
+                                        expenseForm.setData(
+                                            'unit_cost',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    min="0"
+                                    step="1"
+                                    type="number"
+                                />
+                            </FormField>
+                            <FormField
+                                label="Total (FCFA)"
+                                error={expenseForm.errors.total_amount}
+                            >
+                                <input
+                                    value={expenseForm.data.total_amount}
+                                    onChange={(event) =>
+                                        expenseForm.setData(
+                                            'total_amount',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    min="0"
+                                    step="1"
+                                    type="number"
+                                    placeholder={
+                                        computedTotal
+                                            ? formatMoney(computedTotal)
+                                            : 'Auto or manual'
+                                    }
+                                />
                             </FormField>
                         </div>
+
+                        <FormField
+                            label="Receipt"
+                            error={expenseForm.errors.receipt}
+                        >
+                            <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-zinc-300 px-3 py-2 text-sm text-zinc-600 transition hover:border-emerald-400 hover:bg-emerald-50">
+                                <span className="flex items-center gap-2 truncate">
+                                    <Upload className="h-4 w-4 shrink-0" />
+                                    <span className="truncate">
+                                        {expenseForm.data.receipt?.name ||
+                                            'Attach receipt image or PDF'}
+                                    </span>
+                                </span>
+                                <input
+                                    ref={fileInputRef}
+                                    onChange={handleReceiptChange}
+                                    className="sr-only"
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                />
+                            </label>
+                        </FormField>
 
                         <FormField
                             label="Notes"
@@ -639,17 +701,6 @@ export default function Expenses({
                             />
                         </FormField>
 
-                        <input
-                            type="hidden"
-                            value={expenseForm.data.receipt_text}
-                            name="receipt_text"
-                        />
-                        <input
-                            type="hidden"
-                            value={expenseForm.data.receipt_confidence}
-                            name="receipt_confidence"
-                        />
-
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <p className="text-sm text-zinc-500">
                                 {computedTotal !== null
@@ -658,8 +709,11 @@ export default function Expenses({
                             </p>
                             <button
                                 type="submit"
-                                disabled={expenseForm.processing}
-                                className="inline-flex items-center gap-2 rounded-md bg-zinc-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                                disabled={
+                                    expenseForm.processing ||
+                                    !materials.length
+                                }
+                                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                             >
                                 <Plus className="h-4 w-4" />
                                 Save purchase
@@ -669,68 +723,16 @@ export default function Expenses({
                 </section>
 
                 <div className="space-y-6">
-                    <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
-                                <FileImage className="h-5 w-5" />
-                            </span>
-                            <div>
-                                <h2 className="text-base font-semibold text-zinc-950">
-                                    Receipt scanner
-                                </h2>
-                                <p className="text-sm text-zinc-500">
-                                    Browser OCR for image receipts
-                                </p>
-                            </div>
-                        </div>
+                    <ReceiptScanner
+                        receiptPreview={receiptPreview}
+                        ocrState={ocrState}
+                        receiptText={expenseForm.data.receipt_text}
+                        onReceiptTextChange={(value) =>
+                            expenseForm.setData('receipt_text', value)
+                        }
+                    />
 
-                        <div className="mt-5 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50">
-                            {receiptPreview ? (
-                                <img
-                                    src={receiptPreview}
-                                    alt="Receipt preview"
-                                    className="max-h-72 w-full object-contain"
-                                />
-                            ) : (
-                                <div className="flex h-44 items-center justify-center text-sm text-zinc-500">
-                                    No image selected
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="mt-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="font-medium text-zinc-700">
-                                    {ocrState.status === 'scanning'
-                                        ? 'Scanning'
-                                        : ocrState.message || 'Ready'}
-                                </span>
-                                <span className="text-zinc-500">
-                                    {ocrState.progress}%
-                                </span>
-                            </div>
-                            <div className="mt-2 h-2 rounded-md bg-zinc-100">
-                                <div
-                                    className="h-2 rounded-md bg-cyan-600 transition-all"
-                                    style={{ width: `${ocrState.progress}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        <textarea
-                            value={expenseForm.data.receipt_text}
-                            onChange={(event) =>
-                                expenseForm.setData(
-                                    'receipt_text',
-                                    event.target.value,
-                                )
-                            }
-                            className="mt-4 min-h-32 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                            placeholder="OCR text appears here"
-                        />
-                    </section>
-
-                    <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                    <section className="panel-card lift-in rounded-lg p-5">
                         <div className="flex items-center gap-3">
                             <span className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-50 text-amber-700">
                                 <FolderPlus className="h-5 w-5" />
@@ -745,7 +747,10 @@ export default function Expenses({
                             </div>
                         </div>
 
-                        <form onSubmit={submitProject} className="mt-5 space-y-4">
+                        <form
+                            onSubmit={submitProject}
+                            className="mt-5 space-y-4"
+                        >
                             <FormField
                                 label="Project name"
                                 error={projectForm.errors.name}
@@ -759,7 +764,7 @@ export default function Expenses({
                                         )
                                     }
                                     className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                    placeholder="Lekki duplex phase 1"
+                                    placeholder="Bonamoussadi villa phase 1"
                                 />
                             </FormField>
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
@@ -779,7 +784,7 @@ export default function Expenses({
                                     />
                                 </FormField>
                                 <FormField
-                                    label="Budget"
+                                    label="Budget (FCFA)"
                                     error={projectForm.errors.budget}
                                 >
                                     <input
@@ -792,7 +797,7 @@ export default function Expenses({
                                         }
                                         className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                                         min="0"
-                                        step="0.01"
+                                        step="1"
                                         type="number"
                                     />
                                 </FormField>
@@ -800,7 +805,7 @@ export default function Expenses({
                             <button
                                 type="submit"
                                 disabled={projectForm.processing}
-                                className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                                className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 disabled:opacity-50"
                             >
                                 <FolderPlus className="h-4 w-4" />
                                 Create project
@@ -810,7 +815,7 @@ export default function Expenses({
                 </div>
             </div>
 
-            <section className="mt-6 rounded-lg border border-zinc-200 bg-white shadow-sm">
+            <section className="panel-card lift-in mt-6 rounded-lg shadow-sm">
                 <div className="flex flex-col gap-2 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-base font-semibold text-zinc-950">
@@ -829,9 +834,10 @@ export default function Expenses({
                     <table className="min-w-full divide-y divide-zinc-200">
                         <thead className="bg-zinc-50">
                             <tr>
-                                <TableHead>Item</TableHead>
+                                <TableHead>Material</TableHead>
                                 <TableHead>Project</TableHead>
                                 <TableHead>Date</TableHead>
+                                <TableHead>Qty</TableHead>
                                 <TableHead>Payment</TableHead>
                                 <TableHead>Total</TableHead>
                                 <TableHead>Receipt</TableHead>
@@ -841,7 +847,10 @@ export default function Expenses({
                         <tbody className="divide-y divide-zinc-200 bg-white">
                             {expenses.data.length ? (
                                 expenses.data.map((expense) => (
-                                    <tr key={expense.id}>
+                                    <tr
+                                        key={expense.id}
+                                        className="transition hover:bg-emerald-50/40"
+                                    >
                                         <TableCell>
                                             <p className="font-semibold text-zinc-950">
                                                 {expense.title}
@@ -860,6 +869,11 @@ export default function Expenses({
                                                 <CalendarDays className="h-4 w-4 text-zinc-400" />
                                                 {expense.purchaseDate}
                                             </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {expense.quantity !== null
+                                                ? `${Number(expense.quantity).toFixed(1)} ${expense.unit || ''}`
+                                                : '-'}
                                         </TableCell>
                                         <TableCell>
                                             <div className="space-y-1">
@@ -914,7 +928,7 @@ export default function Expenses({
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan="7"
+                                        colSpan="8"
                                         className="px-4 py-10 text-center text-sm text-zinc-500"
                                     >
                                         No purchases match the current filters.
@@ -956,7 +970,6 @@ async function scanReceipt(file, expenseForm, setOcrState) {
         const {
             data: { text, confidence },
         } = await worker.recognize(file);
-
         const extracted = extractReceiptData(text || '');
 
         expenseForm.setData('receipt_text', text || '');
@@ -1000,29 +1013,26 @@ function extractReceiptData(text) {
     const amounts = parseAmounts(totalLine).length
         ? parseAmounts(totalLine)
         : parseAmounts(text);
-    const totalAmount = amounts.length ? Math.max(...amounts).toFixed(2) : '';
+    const totalAmount = amounts.length ? Math.max(...amounts).toFixed(0) : '';
     const dateMatch = text.match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/);
     const purchaseDate = dateMatch ? normalizeDate(dateMatch) : '';
     const vendor =
         lines.find((line) => /[a-z]/i.test(line) && line.length <= 50) || '';
-    const title =
-        lines.find((line) =>
-            /cement|block|steel|sand|granite|pipe|paint|timber|wire|tile|diesel/i.test(
-                line,
-            ),
-        ) || 'Receipt purchase';
 
     return {
         vendor,
-        title,
         purchase_date: purchaseDate,
         total_amount: totalAmount,
     };
 }
 
 function parseAmounts(text) {
-    return [...text.matchAll(/(?:NGN|N)?\s*([0-9]{1,3}(?:[, ]?[0-9]{3})*(?:\.[0-9]{2})|[0-9]+\.[0-9]{2})/gi)]
-        .map((match) => Number(match[1].replace(/[, ]/g, '')))
+    return [
+        ...text.matchAll(
+            /(?:FCFA|XAF|CFA|F)?\s*([0-9]{1,3}(?:[,. ]?[0-9]{3})+|[0-9]+)(?:\.[0-9]{1,2})?/gi,
+        ),
+    ]
+        .map((match) => Number(match[1].replace(/[,. ]/g, '')))
         .filter((amount) => Number.isFinite(amount) && amount > 0);
 }
 
@@ -1042,19 +1052,97 @@ function compactFilters(filters) {
     );
 }
 
+function ReceiptScanner({
+    receiptPreview,
+    ocrState,
+    receiptText,
+    onReceiptTextChange,
+}) {
+    return (
+        <section className="panel-card lift-in rounded-lg p-5">
+            <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
+                    <FileImage className="h-5 w-5" />
+                </span>
+                <div>
+                    <h2 className="text-base font-semibold text-zinc-950">
+                        Receipt scanner
+                    </h2>
+                    <p className="text-sm text-zinc-500">
+                        Browser OCR for image receipts
+                    </p>
+                </div>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50">
+                {receiptPreview ? (
+                    <img
+                        src={receiptPreview}
+                        alt="Receipt preview"
+                        className="max-h-72 w-full object-contain"
+                    />
+                ) : (
+                    <div className="flex h-44 items-center justify-center text-sm text-zinc-500">
+                        No image selected
+                    </div>
+                )}
+            </div>
+
+            <div className="mt-4">
+                <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-zinc-700">
+                        {ocrState.status === 'scanning'
+                            ? 'Scanning'
+                            : ocrState.message || 'Ready'}
+                    </span>
+                    <span className="text-zinc-500">{ocrState.progress}%</span>
+                </div>
+                <div className="mt-2 h-2 rounded-md bg-zinc-100">
+                    <div
+                        className="h-2 rounded-md bg-cyan-600 transition-all"
+                        style={{ width: `${ocrState.progress}%` }}
+                    />
+                </div>
+            </div>
+
+            <textarea
+                value={receiptText}
+                onChange={(event) => onReceiptTextChange(event.target.value)}
+                className="mt-4 min-h-32 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                placeholder="OCR text appears here"
+            />
+        </section>
+    );
+}
+
 function SummaryCard({ label, value, icon: Icon, accent }) {
     const colorMap = {
-        emerald: 'bg-emerald-50 text-emerald-700',
-        cyan: 'bg-cyan-50 text-cyan-700',
-        amber: 'bg-amber-50 text-amber-700',
-        rose: 'bg-rose-50 text-rose-700',
+        emerald: {
+            card: 'border-emerald-200 bg-emerald-50/70',
+            icon: 'bg-emerald-600 text-white shadow-emerald-700/20',
+        },
+        cyan: {
+            card: 'border-cyan-200 bg-cyan-50/70',
+            icon: 'bg-cyan-600 text-white shadow-cyan-700/20',
+        },
+        amber: {
+            card: 'border-amber-200 bg-amber-50/70',
+            icon: 'bg-amber-500 text-white shadow-amber-700/20',
+        },
+        rose: {
+            card: 'border-rose-200 bg-rose-50/70',
+            icon: 'bg-rose-500 text-white shadow-rose-700/20',
+        },
     };
+    const colors = colorMap[accent];
 
     return (
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section
+            className={`lift-in overflow-hidden rounded-lg border p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${colors.card}`}
+        >
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <p className="text-sm font-medium text-zinc-500">
+                    <p className="text-sm font-medium text-zinc-600">
                         {label}
                     </p>
                     <p className="mt-2 text-2xl font-semibold text-zinc-950">
@@ -1062,12 +1150,22 @@ function SummaryCard({ label, value, icon: Icon, accent }) {
                     </p>
                 </div>
                 <span
-                    className={`flex h-11 w-11 items-center justify-center rounded-md ${colorMap[accent]}`}
+                    className={`flex h-11 w-11 items-center justify-center rounded-md shadow-lg ${colors.icon}`}
                 >
                     <Icon className="h-5 w-5" />
                 </span>
             </div>
+            <div className="workline mt-5 h-1 rounded-md" />
         </section>
+    );
+}
+
+function MaterialMeta({ label, value }) {
+    return (
+        <div>
+            <p className="text-xs font-semibold text-zinc-500">{label}</p>
+            <p className="mt-1 font-semibold text-zinc-950">{value}</p>
+        </div>
     );
 }
 
