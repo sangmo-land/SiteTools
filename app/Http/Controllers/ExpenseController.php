@@ -105,7 +105,7 @@ class ExpenseController extends Controller
     public function storeReceipt(Request $request)
     {
         $data = $request->validate(array_merge($this->receiptOcrRules(), [
-            'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+            'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf,tif,tiff', 'max:10240'],
             'vendor' => ['nullable', 'string', 'max:160'],
             'purchase_date' => ['nullable', 'date'],
             'total_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
@@ -206,7 +206,7 @@ class ExpenseController extends Controller
             'total_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
             'status' => ['required', Rule::in(self::STATUSES)],
-            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,tif,tiff', 'max:10240'],
             ...$this->receiptOcrRules(),
             'notes' => ['nullable', 'string', 'max:5000'],
         ];

@@ -6,12 +6,15 @@ use App\Models\Expense;
 use App\Models\Material;
 use App\Models\SiteProject;
 use App\Models\User;
+use App\Services\AmazonTextractReceiptScanner;
+use Aws\MockHandler;
+use Aws\Result;
+use Aws\Textract\TextractClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
+use Mockery;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
@@ -218,45 +221,60 @@ class SiteToolsTest extends TestCase
                 ->component('Tools/Calculators'));
     }
 
-    public function test_user_can_scan_a_receipt_with_openai(): void
+    public function test_user_can_scan_a_receipt_with_amazon_textract(): void
     {
         config([
-            'services.openai.api_key' => 'test-key',
-            'services.openai.base_url' => 'https://api.openai.com/v1',
-            'services.openai.receipt_model' => 'gpt-5.4-mini',
+            'services.textract.key' => 'test-key',
+            'services.textract.secret' => 'test-secret',
+            'services.textract.region' => 'us-east-1',
         ]);
 
-        Http::fake([
-            'api.openai.com/v1/responses' => Http::response([
-                'output' => [[
-                    'type' => 'message',
-                    'content' => [[
-                        'type' => 'output_text',
-                        'text' => json_encode([
-                            'raw_text' => "DEPOT 12\nTOTAL 60,900 FCFA",
-                            'vendor' => 'Depot 12',
-                            'receipt_number' => 'R-9001',
-                            'purchase_date' => '2026-06-20',
-                            'subtotal' => 60000,
-                            'tax_amount' => 900,
-                            'total_amount' => 60900,
-                            'currency' => 'XAF',
-                            'payment_method' => 'POS',
-                            'line_items' => [[
-                                'description' => 'Cement',
-                                'quantity' => 10.5,
-                                'unit_price' => 5800,
-                                'total' => 60900,
-                            ]],
-                            'confidence' => 96.5,
-                        ]),
+        $receipt = UploadedFile::fake()->image('receipt.jpg');
+        $field = fn (string $type, string $text, ?string $currency = null) => array_filter([
+            'Type' => ['Text' => $type, 'Confidence' => 99],
+            'ValueDetection' => ['Text' => $text, 'Confidence' => 96.5],
+            'Currency' => $currency ? ['Code' => $currency, 'Confidence' => 99] : null,
+        ]);
+        $handler = new MockHandler;
+        $handler->append(new Result([
+            'ExpenseDocuments' => [[
+                'SummaryFields' => [
+                    $field('VENDOR_NAME', 'Depot 12'),
+                    $field('INVOICE_RECEIPT_ID', 'R-9001'),
+                    $field('INVOICE_RECEIPT_DATE', '20/06/2026'),
+                    $field('SUBTOTAL', '60,000'),
+                    $field('TAX', '900'),
+                    $field('TOTAL', '60,900 FCFA', 'XAF'),
+                    $field('PAYMENT_METHOD', 'POS'),
+                ],
+                'LineItemGroups' => [[
+                    'LineItems' => [[
+                        'LineItemExpenseFields' => [
+                            $field('ITEM', 'Cement'),
+                            $field('QUANTITY', '10.5'),
+                            $field('UNIT_PRICE', '5,800'),
+                            $field('PRICE', '60,900'),
+                        ],
                     ]],
                 ]],
-            ]),
+                'Blocks' => [
+                    ['BlockType' => 'LINE', 'Text' => 'DEPOT 12'],
+                    ['BlockType' => 'LINE', 'Text' => 'TOTAL 60,900 FCFA'],
+                ],
+            ]],
+        ]));
+        $client = new TextractClient([
+            'version' => 'latest',
+            'region' => 'us-east-1',
+            'credentials' => ['key' => 'test-key', 'secret' => 'test-secret'],
+            'handler' => $handler,
         ]);
+        $scan = (new AmazonTextractReceiptScanner)->scan($receipt, $client);
 
+        $scanner = Mockery::mock(AmazonTextractReceiptScanner::class);
+        $scanner->shouldReceive('scan')->once()->andReturn($scan);
+        $this->app->instance(AmazonTextractReceiptScanner::class, $scanner);
         $user = User::factory()->create();
-        $receipt = UploadedFile::fake()->image('receipt.jpg');
 
         $this->actingAs($user)
             ->post(route('tools.expenses.scan-receipt'), [
@@ -281,21 +299,14 @@ class SiteToolsTest extends TestCase
                 ]],
                 'confidence' => 96.5,
             ]);
-
-        Http::assertSent(function (ClientRequest $request): bool {
-            return $request->url() === 'https://api.openai.com/v1/responses'
-                && $request->hasHeader('Authorization', 'Bearer test-key')
-                && $request['model'] === 'gpt-5.4-mini'
-                && $request['store'] === false
-                && data_get($request->data(), 'input.0.content.1.type') === 'input_image'
-                && data_get($request->data(), 'text.format.type') === 'json_schema';
-        });
     }
 
-    public function test_receipt_scanner_requires_an_openai_api_key(): void
+    public function test_receipt_scanner_requires_amazon_textract_credentials(): void
     {
-        config(['services.openai.api_key' => null]);
-        Http::fake();
+        config([
+            'services.textract.key' => null,
+            'services.textract.secret' => null,
+        ]);
 
         $user = User::factory()->create();
 
@@ -305,9 +316,7 @@ class SiteToolsTest extends TestCase
             ], ['Accept' => 'application/json'])
             ->assertStatus(503)
             ->assertJson([
-                'message' => 'AI receipt scanning is not configured yet.',
+                'message' => 'Amazon Textract is not configured yet.',
             ]);
-
-        Http::assertNothingSent();
     }
 }

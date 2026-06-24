@@ -245,7 +245,7 @@ export default function Expenses({
         }
 
         setReceiptPreview(
-            file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+            canPreviewReceipt(file) ? URL.createObjectURL(file) : null,
         );
         await scanReceipt(file, setOcrState, (scan) => {
             expenseForm.setData({
@@ -264,9 +264,7 @@ export default function Expenses({
         const file = event.target.files?.[0] || null;
         receiptOnlyForm.setData('receipt', file);
         setReceiptOnlyPreview(
-            file?.type.startsWith('image/')
-                ? URL.createObjectURL(file)
-                : null,
+            canPreviewReceipt(file) ? URL.createObjectURL(file) : null,
         );
 
         if (!file) {
@@ -560,14 +558,14 @@ export default function Expenses({
                                             'Choose receipt image or PDF'}
                                     </span>
                                     <span className="text-xs text-cyan-700">
-                                        JPG, PNG, WebP, or PDF up to 10 MB
+                                        JPG, PNG, PDF, or TIFF up to 10 MB
                                     </span>
                                     <input
                                         ref={receiptOnlyInputRef}
                                         onChange={handleReceiptOnlyChange}
                                         className="sr-only"
                                         type="file"
-                                        accept="image/*,.pdf"
+                                        accept=".jpg,.jpeg,.png,.pdf,.tif,.tiff"
                                     />
                                 </label>
                             </FormField>
@@ -844,7 +842,7 @@ export default function Expenses({
                                     onChange={handleReceiptChange}
                                     className="sr-only"
                                     type="file"
-                                    accept="image/*,.pdf"
+                                    accept=".jpg,.jpeg,.png,.pdf,.tif,.tiff"
                                 />
                             </label>
                         </FormField>
@@ -870,7 +868,7 @@ export default function Expenses({
                             <p className="text-sm text-zinc-500">
                                 {computedTotal !== null
                                     ? `Calculated total: ${formatMoney(computedTotal)}`
-                                    : 'AI receipt scanning can prefill vendor, date, and total.'}
+                                    : 'Amazon Textract can prefill vendor, date, total, and line items.'}
                             </p>
                             <button
                                 type="submit"
@@ -1170,7 +1168,7 @@ async function scanReceipt(file, setOcrState, onScan) {
     setOcrState({
         status: 'scanning',
         progress: 15,
-        message: 'Sending receipt to AI',
+        message: 'Sending receipt to Amazon Textract',
     });
 
     try {
@@ -1193,7 +1191,7 @@ async function scanReceipt(file, setOcrState, onScan) {
         setOcrState({
             status: 'complete',
             progress: 100,
-            message: 'AI scan complete',
+            message: 'Amazon Textract scan complete',
         });
     } catch (error) {
         setOcrState({
@@ -1201,7 +1199,7 @@ async function scanReceipt(file, setOcrState, onScan) {
             progress: 0,
             message:
                 error.response?.data?.message ||
-                'AI scan unavailable. Enter the details manually.',
+                'Amazon Textract is unavailable. Enter the details manually.',
         });
     }
 }
@@ -1217,6 +1215,10 @@ function receiptDataFromScan(scan) {
         receipt_payment_method: scan.payment_method || '',
         receipt_items: scan.items || [],
     };
+}
+
+function canPreviewReceipt(file) {
+    return ['image/jpeg', 'image/png'].includes(file?.type);
 }
 
 function compactFilters(filters) {
@@ -1264,7 +1266,7 @@ function ReceiptScanner({
                         Receipt scanner
                     </h2>
                     <p className="text-sm text-zinc-500">
-                        OpenAI vision for receipt images and PDFs
+                        Amazon Textract expense analysis for images and PDFs
                     </p>
                 </div>
             </div>
@@ -1352,7 +1354,7 @@ function ReceiptScanner({
                 value={receiptText}
                 onChange={(event) => onReceiptTextChange(event.target.value)}
                 className="mt-4 min-h-32 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="AI-extracted receipt text appears here"
+                placeholder="Amazon Textract OCR text appears here"
             />
         </section>
     );
