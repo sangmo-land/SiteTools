@@ -104,23 +104,35 @@ class ExpenseController extends Controller
 
     public function storeReceipt(Request $request)
     {
-        $data = $request->validate([
+        $data = $request->validate(array_merge($this->receiptOcrRules(), [
             'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
-        ]);
+            'vendor' => ['nullable', 'string', 'max:160'],
+            'purchase_date' => ['nullable', 'date'],
+            'total_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+        ]));
         $user = $request->user();
         $file = $data['receipt'];
+        $vendor = $data['vendor'] ?? null;
 
         Expense::create([
             'user_id' => $user->id,
             'entry_type' => 'receipt',
-            'title' => 'Receipt only',
+            'title' => $vendor ? "Receipt - {$vendor}" : 'Receipt only',
+            'vendor' => $vendor,
             'category' => 'Other',
-            'purchase_date' => now()->toDateString(),
-            'total_amount' => 0,
-            'payment_method' => 'Not provided',
+            'purchase_date' => $data['purchase_date'] ?? now()->toDateString(),
+            'total_amount' => $this->nullableFloat($data['total_amount'] ?? null) ?? 0,
+            'payment_method' => $data['receipt_payment_method'] ?? 'Not provided',
             'status' => 'pending',
             'receipt_path' => $file->store("receipts/{$user->id}", 'public'),
             'receipt_original_name' => $file->getClientOriginalName(),
+            'receipt_number' => $data['receipt_number'] ?? null,
+            'receipt_currency' => $data['receipt_currency'] ?? null,
+            'receipt_subtotal' => $this->nullableFloat($data['receipt_subtotal'] ?? null),
+            'receipt_tax_amount' => $this->nullableFloat($data['receipt_tax_amount'] ?? null),
+            'receipt_items' => $data['receipt_items'] ?? [],
+            'receipt_text' => $data['receipt_text'] ?? null,
+            'receipt_confidence' => $this->nullableFloat($data['receipt_confidence'] ?? null),
         ]);
 
         return back()->with('status', 'Receipt uploaded.');
@@ -195,9 +207,26 @@ class ExpenseController extends Controller
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
             'status' => ['required', Rule::in(self::STATUSES)],
             'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+            ...$this->receiptOcrRules(),
+            'notes' => ['nullable', 'string', 'max:5000'],
+        ];
+    }
+
+    private function receiptOcrRules(): array
+    {
+        return [
+            'receipt_number' => ['nullable', 'string', 'max:100'],
+            'receipt_currency' => ['nullable', 'string', 'max:10'],
+            'receipt_subtotal' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'receipt_tax_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'receipt_payment_method' => ['nullable', 'string', 'max:50'],
+            'receipt_items' => ['nullable', 'array', 'max:200'],
+            'receipt_items.*.description' => ['required', 'string', 'max:255'],
+            'receipt_items.*.quantity' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'receipt_items.*.unit_price' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'receipt_items.*.total' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'receipt_text' => ['nullable', 'string', 'max:65000'],
             'receipt_confidence' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
 
@@ -229,6 +258,11 @@ class ExpenseController extends Controller
             'status' => $data['status'],
             'receipt_text' => $data['receipt_text'] ?? null,
             'receipt_confidence' => $this->nullableFloat($data['receipt_confidence'] ?? null),
+            'receipt_number' => $data['receipt_number'] ?? null,
+            'receipt_currency' => $data['receipt_currency'] ?? null,
+            'receipt_subtotal' => $this->nullableFloat($data['receipt_subtotal'] ?? null),
+            'receipt_tax_amount' => $this->nullableFloat($data['receipt_tax_amount'] ?? null),
+            'receipt_items' => $data['receipt_items'] ?? [],
             'notes' => $data['notes'] ?? null,
         ];
 
@@ -271,6 +305,11 @@ class ExpenseController extends Controller
             'receiptOriginalName' => $expense->receipt_original_name,
             'receiptText' => $expense->receipt_text,
             'receiptConfidence' => $expense->receipt_confidence !== null ? (float) $expense->receipt_confidence : null,
+            'receiptNumber' => $expense->receipt_number,
+            'receiptCurrency' => $expense->receipt_currency,
+            'receiptSubtotal' => $expense->receipt_subtotal !== null ? (float) $expense->receipt_subtotal : null,
+            'receiptTaxAmount' => $expense->receipt_tax_amount !== null ? (float) $expense->receipt_tax_amount : null,
+            'receiptItems' => $expense->receipt_items ?? [],
             'notes' => $expense->notes,
             'project' => $expense->siteProject ? [
                 'id' => $expense->siteProject->id,

@@ -27,6 +27,11 @@ class Expense extends Model
         'status',
         'receipt_path',
         'receipt_original_name',
+        'receipt_number',
+        'receipt_currency',
+        'receipt_subtotal',
+        'receipt_tax_amount',
+        'receipt_items',
         'receipt_text',
         'receipt_confidence',
         'notes',
@@ -39,6 +44,9 @@ class Expense extends Model
             'quantity' => 'decimal:1',
             'unit_cost' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'receipt_subtotal' => 'decimal:2',
+            'receipt_tax_amount' => 'decimal:2',
+            'receipt_items' => 'array',
             'receipt_confidence' => 'decimal:2',
         ];
     }

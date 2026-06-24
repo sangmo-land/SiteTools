@@ -7,6 +7,7 @@ import {
     CalendarDays,
     Eye,
     FileImage,
+    FileSpreadsheet,
     Filter,
     FolderPlus,
     PackageSearch,
@@ -20,6 +21,17 @@ import {
 import { useMemo, useRef, useState } from 'react';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const emptyReceiptOcr = () => ({
+    receipt_text: '',
+    receipt_confidence: '',
+    receipt_number: '',
+    receipt_currency: '',
+    receipt_subtotal: '',
+    receipt_tax_amount: '',
+    receipt_payment_method: '',
+    receipt_items: [],
+});
 
 const formatMoney = (value) =>
     new Intl.NumberFormat('fr-CM', {
@@ -58,6 +70,11 @@ export default function Expenses({
         progress: 0,
         message: '',
     });
+    const [receiptOnlyOcrState, setReceiptOnlyOcrState] = useState({
+        status: 'idle',
+        progress: 0,
+        message: '',
+    });
     const [filterData, setFilterData] = useState({
         search: filters.search || '',
         category: filters.category || '',
@@ -84,15 +101,20 @@ export default function Expenses({
                 : paymentMethods[0],
             status: 'paid',
             receipt: null,
-            receipt_text: '',
-            receipt_confidence: '',
+            ...emptyReceiptOcr(),
             notes: '',
         }),
         [firstMaterial, paymentMethods],
     );
 
     const expenseForm = useForm(defaultExpenseForm);
-    const receiptOnlyForm = useForm({ receipt: null });
+    const receiptOnlyForm = useForm({
+        receipt: null,
+        vendor: '',
+        purchase_date: '',
+        total_amount: '',
+        ...emptyReceiptOcr(),
+    });
     const projectForm = useForm({
         name: '',
         location: '',
@@ -143,6 +165,11 @@ export default function Expenses({
             onSuccess: () => {
                 receiptOnlyForm.reset();
                 setReceiptOnlyPreview(null);
+                setReceiptOnlyOcrState({
+                    status: 'idle',
+                    progress: 0,
+                    message: '',
+                });
 
                 if (receiptOnlyInputRef.current) {
                     receiptOnlyInputRef.current.value = '';
@@ -220,10 +247,20 @@ export default function Expenses({
         setReceiptPreview(
             file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
         );
-        await scanReceipt(file, expenseForm, setOcrState);
+        await scanReceipt(file, setOcrState, (scan) => {
+            expenseForm.setData({
+                ...expenseForm.data,
+                ...receiptDataFromScan(scan),
+                vendor: expenseForm.data.vendor || scan.vendor || '',
+                purchase_date:
+                    scan.purchase_date || expenseForm.data.purchase_date,
+                total_amount:
+                    expenseForm.data.total_amount || scan.total_amount || '',
+            });
+        });
     };
 
-    const handleReceiptOnlyChange = (event) => {
+    const handleReceiptOnlyChange = async (event) => {
         const file = event.target.files?.[0] || null;
         receiptOnlyForm.setData('receipt', file);
         setReceiptOnlyPreview(
@@ -231,6 +268,26 @@ export default function Expenses({
                 ? URL.createObjectURL(file)
                 : null,
         );
+
+        if (!file) {
+            setReceiptOnlyOcrState({
+                status: 'idle',
+                progress: 0,
+                message: '',
+            });
+            return;
+        }
+
+        await scanReceipt(file, setReceiptOnlyOcrState, (scan) => {
+            receiptOnlyForm.setData({
+                ...receiptOnlyForm.data,
+                receipt: file,
+                ...receiptDataFromScan(scan),
+                vendor: scan.vendor || '',
+                purchase_date: scan.purchase_date || '',
+                total_amount: scan.total_amount ?? '',
+            });
+        });
     };
 
     const deleteExpense = (expense) => {
@@ -256,6 +313,13 @@ export default function Expenses({
                         </h1>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                        <a
+                            href={route('tools.receipts.export')}
+                            className="inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            Export receipt Excel
+                        </a>
                         <a
                             href="/admin/materials"
                             className="inline-flex items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-900 shadow-sm transition hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
@@ -480,20 +544,10 @@ export default function Expenses({
                             className="mt-5 space-y-5"
                         >
                             <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-950">
-                                Choose a receipt and save it as-is. No material,
-                                amount, payment, or project information is
-                                required.
+                                Choose a receipt. OCR will read its supplier,
+                                date, totals, and line items for the Excel
+                                export—no manual purchase details are required.
                             </div>
-
-                            {receiptOnlyPreview && (
-                                <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50">
-                                    <img
-                                        src={receiptOnlyPreview}
-                                        alt="Receipt preview"
-                                        className="max-h-72 w-full object-contain"
-                                    />
-                                </div>
-                            )}
 
                             <FormField
                                 label="Receipt"
@@ -523,7 +577,8 @@ export default function Expenses({
                                     type="submit"
                                     disabled={
                                         receiptOnlyForm.processing ||
-                                        !receiptOnlyForm.data.receipt
+                                        !receiptOnlyForm.data.receipt ||
+                                        receiptOnlyOcrState.status === 'scanning'
                                     }
                                     className="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-700/20 transition hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 disabled:opacity-50"
                                 >
@@ -835,16 +890,38 @@ export default function Expenses({
                 </section>
 
                 <div className="space-y-6">
-                    {uploadMode === 'expense' && (
-                        <ReceiptScanner
-                            receiptPreview={receiptPreview}
-                            ocrState={ocrState}
-                            receiptText={expenseForm.data.receipt_text}
-                            onReceiptTextChange={(value) =>
-                                expenseForm.setData('receipt_text', value)
-                            }
-                        />
-                    )}
+                    <ReceiptScanner
+                        receiptPreview={
+                            uploadMode === 'receipt'
+                                ? receiptOnlyPreview
+                                : receiptPreview
+                        }
+                        receiptName={
+                            uploadMode === 'receipt'
+                                ? receiptOnlyForm.data.receipt?.name
+                                : expenseForm.data.receipt?.name
+                        }
+                        ocrState={
+                            uploadMode === 'receipt'
+                                ? receiptOnlyOcrState
+                                : ocrState
+                        }
+                        scanData={
+                            uploadMode === 'receipt'
+                                ? receiptOnlyForm.data
+                                : expenseForm.data
+                        }
+                        receiptText={
+                            uploadMode === 'receipt'
+                                ? receiptOnlyForm.data.receipt_text
+                                : expenseForm.data.receipt_text
+                        }
+                        onReceiptTextChange={(value) =>
+                            uploadMode === 'receipt'
+                                ? receiptOnlyForm.setData('receipt_text', value)
+                                : expenseForm.setData('receipt_text', value)
+                        }
+                    />
 
                     <section className="panel-card lift-in rounded-lg p-5">
                         <div className="flex items-center gap-3">
@@ -992,9 +1069,16 @@ export default function Expenses({
                                         </TableCell>
                                         <TableCell>
                                             {expense.entryType === 'receipt' ? (
-                                                <span className="text-zinc-400">
-                                                    Not provided
-                                                </span>
+                                                expense.paymentMethod ===
+                                                'Not provided' ? (
+                                                    <span className="text-zinc-400">
+                                                        Not provided
+                                                    </span>
+                                                ) : (
+                                                    <span>
+                                                        {expense.paymentMethod}
+                                                    </span>
+                                                )
                                             ) : (
                                                 <div className="space-y-1">
                                                     <span>
@@ -1008,9 +1092,19 @@ export default function Expenses({
                                         </TableCell>
                                         <TableCell>
                                             {expense.entryType === 'receipt' ? (
-                                                <span className="text-zinc-400">
-                                                    Not provided
-                                                </span>
+                                                Number(expense.totalAmount) >
+                                                0 ? (
+                                                    <span className="font-semibold text-zinc-950">
+                                                        {formatReceiptAmount(
+                                                            expense.totalAmount,
+                                                            expense.receiptCurrency,
+                                                        )}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-zinc-400">
+                                                        Not provided
+                                                    </span>
+                                                )
                                             ) : (
                                                 <span className="font-semibold text-zinc-950">
                                                     {formatMoney(
@@ -1072,7 +1166,7 @@ export default function Expenses({
     );
 }
 
-async function scanReceipt(file, expenseForm, setOcrState) {
+async function scanReceipt(file, setOcrState, onScan) {
     setOcrState({
         status: 'scanning',
         progress: 15,
@@ -1094,16 +1188,7 @@ async function scanReceipt(file, expenseForm, setOcrState) {
         );
         const scan = response.data;
 
-        expenseForm.setData({
-            ...expenseForm.data,
-            receipt_text: scan.text || '',
-            receipt_confidence: scan.confidence ?? '',
-            vendor: expenseForm.data.vendor || scan.vendor || '',
-            purchase_date:
-                scan.purchase_date || expenseForm.data.purchase_date,
-            total_amount:
-                expenseForm.data.total_amount || scan.total_amount || '',
-        });
+        onScan(scan);
 
         setOcrState({
             status: 'complete',
@@ -1121,6 +1206,19 @@ async function scanReceipt(file, expenseForm, setOcrState) {
     }
 }
 
+function receiptDataFromScan(scan) {
+    return {
+        receipt_text: scan.text || '',
+        receipt_confidence: scan.confidence ?? '',
+        receipt_number: scan.receipt_number || '',
+        receipt_currency: scan.currency || '',
+        receipt_subtotal: scan.subtotal ?? '',
+        receipt_tax_amount: scan.tax_amount ?? '',
+        receipt_payment_method: scan.payment_method || '',
+        receipt_items: scan.items || [],
+    };
+}
+
 function compactFilters(filters) {
     return Object.fromEntries(
         Object.entries(filters).filter(([, value]) => value !== ''),
@@ -1129,10 +1227,32 @@ function compactFilters(filters) {
 
 function ReceiptScanner({
     receiptPreview,
+    receiptName,
     ocrState,
+    scanData,
     receiptText,
     onReceiptTextChange,
 }) {
+    const extractedFields = [
+        ['Vendor', scanData.vendor],
+        ['Date', scanData.purchase_date],
+        ['Receipt no.', scanData.receipt_number],
+        [
+            'Total',
+            formatReceiptAmount(
+                scanData.total_amount,
+                scanData.receipt_currency,
+            ),
+        ],
+        [
+            'Confidence',
+            scanData.receipt_confidence !== ''
+                ? `${scanData.receipt_confidence}%`
+                : null,
+        ],
+        ['Line items', scanData.receipt_items?.length || null],
+    ].filter(([, value]) => value !== null && value !== undefined && value !== '');
+
     return (
         <section className="panel-card lift-in rounded-lg p-5">
             <div className="flex items-center gap-3">
@@ -1157,8 +1277,9 @@ function ReceiptScanner({
                         className="max-h-72 w-full object-contain"
                     />
                 ) : (
-                    <div className="flex h-44 items-center justify-center text-sm text-zinc-500">
-                        No image selected
+                    <div className="flex h-44 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-zinc-500">
+                        <FileImage className="h-7 w-7 text-zinc-400" />
+                        {receiptName || 'No receipt selected'}
                     </div>
                 )}
             </div>
@@ -1180,6 +1301,53 @@ function ReceiptScanner({
                 </div>
             </div>
 
+            {extractedFields.length > 0 && (
+                <div className="mt-4 grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 sm:grid-cols-2">
+                    {extractedFields.map(([label, value]) => (
+                        <div key={label}>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                {label}
+                            </p>
+                            <p className="mt-1 break-words text-sm font-semibold text-zinc-950">
+                                {value}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {scanData.receipt_items?.length > 0 && (
+                <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200">
+                    <table className="min-w-full divide-y divide-zinc-200 text-sm">
+                        <thead className="bg-zinc-50 text-left text-xs font-semibold text-zinc-500">
+                            <tr>
+                                <th className="px-3 py-2">Item</th>
+                                <th className="px-3 py-2">Qty</th>
+                                <th className="px-3 py-2">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100 bg-white">
+                            {scanData.receipt_items.map((item, index) => (
+                                <tr key={`${item.description}-${index}`}>
+                                    <td className="px-3 py-2 text-zinc-800">
+                                        {item.description}
+                                    </td>
+                                    <td className="px-3 py-2 text-zinc-600">
+                                        {item.quantity ?? '-'}
+                                    </td>
+                                    <td className="px-3 py-2 font-medium text-zinc-800">
+                                        {formatReceiptAmount(
+                                            item.total,
+                                            scanData.receipt_currency,
+                                        ) || '-'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
             <textarea
                 value={receiptText}
                 onChange={(event) => onReceiptTextChange(event.target.value)}
@@ -1188,6 +1356,14 @@ function ReceiptScanner({
             />
         </section>
     );
+}
+
+function formatReceiptAmount(value, currency) {
+    if (value === '' || value === null || value === undefined) {
+        return null;
+    }
+
+    return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(Number(value))}${currency ? ` ${currency}` : ''}`;
 }
 
 function SummaryCard({ label, value, icon: Icon, accent }) {

@@ -12,6 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class SiteToolsTest extends TestCase
@@ -90,6 +91,22 @@ class SiteToolsTest extends TestCase
         $this->actingAs($user)
             ->post(route('tools.receipts.store'), [
                 'receipt' => UploadedFile::fake()->image('supplier-receipt.jpg'),
+                'vendor' => 'BuildMart',
+                'purchase_date' => '2026-06-23',
+                'total_amount' => 14500,
+                'receipt_number' => 'INV-1042',
+                'receipt_currency' => 'XAF',
+                'receipt_subtotal' => 14000,
+                'receipt_tax_amount' => 500,
+                'receipt_payment_method' => 'Cash',
+                'receipt_confidence' => 97.5,
+                'receipt_text' => "BUILDMART\nCement 2 x 7,000\nTOTAL 14,500 XAF",
+                'receipt_items' => [[
+                    'description' => 'Cement',
+                    'quantity' => 2,
+                    'unit_price' => 7000,
+                    'total' => 14000,
+                ]],
             ])
             ->assertSessionHasNoErrors()
             ->assertSessionHas('status', 'Receipt uploaded.')
@@ -99,8 +116,56 @@ class SiteToolsTest extends TestCase
 
         $this->assertSame('receipt', $receipt->entry_type);
         $this->assertNull($receipt->material_id);
+        $this->assertSame('BuildMart', $receipt->vendor);
+        $this->assertSame('INV-1042', $receipt->receipt_number);
+        $this->assertSame('XAF', $receipt->receipt_currency);
+        $this->assertSame('Cement', $receipt->receipt_items[0]['description']);
         $this->assertSame('supplier-receipt.jpg', $receipt->receipt_original_name);
         Storage::disk('public')->assertExists($receipt->receipt_path);
+    }
+
+    public function test_user_can_export_ocr_receipts_to_excel(): void
+    {
+        $user = User::factory()->create();
+        Expense::create([
+            'user_id' => $user->id,
+            'entry_type' => 'receipt',
+            'title' => 'Receipt - BuildMart',
+            'vendor' => 'BuildMart',
+            'category' => 'Other',
+            'purchase_date' => '2026-06-23',
+            'total_amount' => 14500,
+            'payment_method' => 'Cash',
+            'status' => 'pending',
+            'receipt_path' => 'receipts/1/supplier-receipt.jpg',
+            'receipt_original_name' => 'supplier-receipt.jpg',
+            'receipt_number' => 'INV-1042',
+            'receipt_currency' => 'XAF',
+            'receipt_confidence' => 97.5,
+            'receipt_items' => [[
+                'description' => 'Cement',
+                'quantity' => 2,
+                'unit_price' => 7000,
+                'total' => 14000,
+            ]],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('tools.receipts.export'));
+
+        $response->assertOk()
+            ->assertDownload('receipt-ocr-export-'.now()->format('Y-m-d').'.xlsx');
+
+        $temporaryFile = tempnam(sys_get_temp_dir(), 'receipt-export-');
+        file_put_contents($temporaryFile, $response->streamedContent());
+        $spreadsheet = IOFactory::load($temporaryFile);
+
+        $this->assertSame(['Receipts', 'Line Items'], $spreadsheet->getSheetNames());
+        $this->assertSame('BuildMart', $spreadsheet->getSheetByName('Receipts')->getCell('C2')->getValue());
+        $this->assertEquals(14500, $spreadsheet->getSheetByName('Receipts')->getCell('H2')->getValue());
+        $this->assertSame('Cement', $spreadsheet->getSheetByName('Line Items')->getCell('E2')->getValue());
+
+        $spreadsheet->disconnectWorksheets();
+        unlink($temporaryFile);
     }
 
     public function test_receipt_only_upload_requires_a_receipt(): void
@@ -170,9 +235,19 @@ class SiteToolsTest extends TestCase
                         'text' => json_encode([
                             'raw_text' => "DEPOT 12\nTOTAL 60,900 FCFA",
                             'vendor' => 'Depot 12',
+                            'receipt_number' => 'R-9001',
                             'purchase_date' => '2026-06-20',
+                            'subtotal' => 60000,
+                            'tax_amount' => 900,
                             'total_amount' => 60900,
                             'currency' => 'XAF',
+                            'payment_method' => 'POS',
+                            'line_items' => [[
+                                'description' => 'Cement',
+                                'quantity' => 10.5,
+                                'unit_price' => 5800,
+                                'total' => 60900,
+                            ]],
                             'confidence' => 96.5,
                         ]),
                     ]],
@@ -191,9 +266,19 @@ class SiteToolsTest extends TestCase
             ->assertJson([
                 'text' => "DEPOT 12\nTOTAL 60,900 FCFA",
                 'vendor' => 'Depot 12',
+                'receipt_number' => 'R-9001',
                 'purchase_date' => '2026-06-20',
+                'subtotal' => 60000,
+                'tax_amount' => 900,
                 'total_amount' => 60900,
                 'currency' => 'XAF',
+                'payment_method' => 'POS',
+                'items' => [[
+                    'description' => 'Cement',
+                    'quantity' => 10.5,
+                    'unit_price' => 5800,
+                    'total' => 60900,
+                ]],
                 'confidence' => 96.5,
             ]);
 
