@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -79,6 +80,38 @@ class SiteToolsTest extends TestCase
             'title' => 'Cement 42.5R 50kg',
             'total_amount' => 60900,
         ]);
+    }
+
+    public function test_user_can_upload_a_receipt_without_expense_details(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('tools.receipts.store'), [
+                'receipt' => UploadedFile::fake()->image('supplier-receipt.jpg'),
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('status', 'Receipt uploaded.')
+            ->assertRedirect();
+
+        $receipt = Expense::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertSame('receipt', $receipt->entry_type);
+        $this->assertNull($receipt->material_id);
+        $this->assertSame('supplier-receipt.jpg', $receipt->receipt_original_name);
+        Storage::disk('public')->assertExists($receipt->receipt_path);
+    }
+
+    public function test_receipt_only_upload_requires_a_receipt(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('tools.receipts.store'))
+            ->assertSessionHasErrors('receipt');
+
+        $this->assertDatabaseCount('expenses', 0);
     }
 
     public function test_expense_tracker_and_calculators_render(): void

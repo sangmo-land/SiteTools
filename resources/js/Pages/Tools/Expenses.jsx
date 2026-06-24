@@ -49,7 +49,10 @@ export default function Expenses({
     summary,
 }) {
     const fileInputRef = useRef(null);
+    const receiptOnlyInputRef = useRef(null);
+    const [uploadMode, setUploadMode] = useState('expense');
     const [receiptPreview, setReceiptPreview] = useState(null);
+    const [receiptOnlyPreview, setReceiptOnlyPreview] = useState(null);
     const [ocrState, setOcrState] = useState({
         status: 'idle',
         progress: 0,
@@ -89,6 +92,7 @@ export default function Expenses({
     );
 
     const expenseForm = useForm(defaultExpenseForm);
+    const receiptOnlyForm = useForm({ receipt: null });
     const projectForm = useForm({
         name: '',
         location: '',
@@ -125,6 +129,23 @@ export default function Expenses({
 
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
+                }
+            },
+        });
+    };
+
+    const submitReceiptOnly = (event) => {
+        event.preventDefault();
+
+        receiptOnlyForm.post(route('tools.receipts.store'), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                receiptOnlyForm.reset();
+                setReceiptOnlyPreview(null);
+
+                if (receiptOnlyInputRef.current) {
+                    receiptOnlyInputRef.current.value = '';
                 }
             },
         });
@@ -200,6 +221,16 @@ export default function Expenses({
             file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
         );
         await scanReceipt(file, expenseForm, setOcrState);
+    };
+
+    const handleReceiptOnlyChange = (event) => {
+        const file = event.target.files?.[0] || null;
+        receiptOnlyForm.setData('receipt', file);
+        setReceiptOnlyPreview(
+            file?.type.startsWith('image/')
+                ? URL.createObjectURL(file)
+                : null,
+        );
     };
 
     const deleteExpense = (expense) => {
@@ -409,23 +440,111 @@ export default function Expenses({
                         </span>
                         <div>
                             <h2 className="text-base font-semibold text-zinc-950">
-                                Record purchase
+                                Add a receipt or purchase
                             </h2>
                             <p className="text-sm text-zinc-500">
-                                Select a catalogue material, supplier, payment,
-                                and receipt.
+                                Upload only the receipt, or record all purchase
+                                details.
                             </p>
                         </div>
                     </div>
 
-                    {!materials.length && (
-                        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                            Add materials in the Filament admin dashboard before
-                            recording expenses.
-                        </div>
-                    )}
+                    <div className="mt-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1">
+                        <button
+                            type="button"
+                            onClick={() => setUploadMode('receipt')}
+                            className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                                uploadMode === 'receipt'
+                                    ? 'bg-white text-cyan-800 shadow-sm'
+                                    : 'text-zinc-600 hover:text-zinc-950'
+                            }`}
+                        >
+                            Receipt only
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setUploadMode('expense')}
+                            className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                                uploadMode === 'expense'
+                                    ? 'bg-white text-emerald-800 shadow-sm'
+                                    : 'text-zinc-600 hover:text-zinc-950'
+                            }`}
+                        >
+                            Full expense
+                        </button>
+                    </div>
 
-                    <form onSubmit={submitExpense} className="mt-5 space-y-5">
+                    {uploadMode === 'receipt' ? (
+                        <form
+                            onSubmit={submitReceiptOnly}
+                            className="mt-5 space-y-5"
+                        >
+                            <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-950">
+                                Choose a receipt and save it as-is. No material,
+                                amount, payment, or project information is
+                                required.
+                            </div>
+
+                            {receiptOnlyPreview && (
+                                <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50">
+                                    <img
+                                        src={receiptOnlyPreview}
+                                        alt="Receipt preview"
+                                        className="max-h-72 w-full object-contain"
+                                    />
+                                </div>
+                            )}
+
+                            <FormField
+                                label="Receipt"
+                                error={receiptOnlyForm.errors.receipt}
+                            >
+                                <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-cyan-300 bg-cyan-50/50 px-4 py-6 text-center text-sm text-cyan-900 transition hover:border-cyan-500 hover:bg-cyan-50">
+                                    <Upload className="h-6 w-6" />
+                                    <span className="font-semibold">
+                                        {receiptOnlyForm.data.receipt?.name ||
+                                            'Choose receipt image or PDF'}
+                                    </span>
+                                    <span className="text-xs text-cyan-700">
+                                        JPG, PNG, WebP, or PDF up to 10 MB
+                                    </span>
+                                    <input
+                                        ref={receiptOnlyInputRef}
+                                        onChange={handleReceiptOnlyChange}
+                                        className="sr-only"
+                                        type="file"
+                                        accept="image/*,.pdf"
+                                    />
+                                </label>
+                            </FormField>
+
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        receiptOnlyForm.processing ||
+                                        !receiptOnlyForm.data.receipt
+                                    }
+                                    className="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-700/20 transition hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 disabled:opacity-50"
+                                >
+                                    <Upload className="h-4 w-4" />
+                                    Upload receipt
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <>
+                            {!materials.length && (
+                                <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                                    Add materials in the Filament admin dashboard
+                                    before recording expenses.
+                                </div>
+                            )}
+
+                            <form
+                                onSubmit={submitExpense}
+                                className="mt-5 space-y-5"
+                            >
                         <div className="grid gap-4 md:grid-cols-2">
                             <FormField
                                 label="Item or material"
@@ -710,18 +829,22 @@ export default function Expenses({
                                 Save purchase
                             </button>
                         </div>
-                    </form>
+                            </form>
+                        </>
+                    )}
                 </section>
 
                 <div className="space-y-6">
-                    <ReceiptScanner
-                        receiptPreview={receiptPreview}
-                        ocrState={ocrState}
-                        receiptText={expenseForm.data.receipt_text}
-                        onReceiptTextChange={(value) =>
-                            expenseForm.setData('receipt_text', value)
-                        }
-                    />
+                    {uploadMode === 'expense' && (
+                        <ReceiptScanner
+                            receiptPreview={receiptPreview}
+                            ocrState={ocrState}
+                            receiptText={expenseForm.data.receipt_text}
+                            onReceiptTextChange={(value) =>
+                                expenseForm.setData('receipt_text', value)
+                            }
+                        />
+                    )}
 
                     <section className="panel-card lift-in rounded-lg p-5">
                         <div className="flex items-center gap-3">
@@ -825,7 +948,7 @@ export default function Expenses({
                     <table className="min-w-full divide-y divide-zinc-200">
                         <thead className="bg-zinc-50">
                             <tr>
-                                <TableHead>Material</TableHead>
+                                <TableHead>Entry</TableHead>
                                 <TableHead>Project</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Qty</TableHead>
@@ -847,8 +970,9 @@ export default function Expenses({
                                                 {expense.title}
                                             </p>
                                             <p className="mt-1 text-sm text-zinc-500">
-                                                {expense.vendor || 'No vendor'}{' '}
-                                                - {expense.category}
+                                                {expense.entryType === 'receipt'
+                                                    ? expense.receiptOriginalName
+                                                    : `${expense.vendor || 'No vendor'} - ${expense.category}`}
                                             </p>
                                         </TableCell>
                                         <TableCell>
@@ -867,21 +991,33 @@ export default function Expenses({
                                                 : '-'}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="space-y-1">
-                                                <span>
-                                                    {expense.paymentMethod}
+                                            {expense.entryType === 'receipt' ? (
+                                                <span className="text-zinc-400">
+                                                    Not provided
                                                 </span>
-                                                <StatusBadge
-                                                    status={expense.status}
-                                                />
-                                            </div>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    <span>
+                                                        {expense.paymentMethod}
+                                                    </span>
+                                                    <StatusBadge
+                                                        status={expense.status}
+                                                    />
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="font-semibold text-zinc-950">
-                                                {formatMoney(
-                                                    expense.totalAmount,
-                                                )}
-                                            </span>
+                                            {expense.entryType === 'receipt' ? (
+                                                <span className="text-zinc-400">
+                                                    Not provided
+                                                </span>
+                                            ) : (
+                                                <span className="font-semibold text-zinc-950">
+                                                    {formatMoney(
+                                                        expense.totalAmount,
+                                                    )}
+                                                </span>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             {expense.receiptUrl ? (

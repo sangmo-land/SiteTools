@@ -45,6 +45,7 @@ class ExpenseController extends Controller
     {
         $user = $request->user();
         $summaryQuery = $this->filteredExpenseQuery($request, $user);
+        $spendingSummaryQuery = (clone $summaryQuery)->where('entry_type', 'expense');
 
         $expenses = $this->filteredExpenseQuery($request, $user)
             ->with(['material', 'siteProject'])
@@ -83,9 +84,9 @@ class ExpenseController extends Controller
             'statuses' => self::STATUSES,
             'filters' => $request->only(['search', 'category', 'material', 'project', 'status', 'from', 'to']),
             'summary' => [
-                'total' => (float) (clone $summaryQuery)->sum('total_amount'),
+                'total' => (float) (clone $spendingSummaryQuery)->sum('total_amount'),
                 'count' => (clone $summaryQuery)->count(),
-                'average' => (float) ((clone $summaryQuery)->avg('total_amount') ?? 0),
+                'average' => (float) ((clone $spendingSummaryQuery)->avg('total_amount') ?? 0),
                 'withReceipts' => (clone $summaryQuery)->whereNotNull('receipt_path')->count(),
             ],
         ]);
@@ -99,6 +100,30 @@ class ExpenseController extends Controller
         Expense::create($this->expenseAttributes($data, $request, $user));
 
         return back()->with('status', 'Expense recorded.');
+    }
+
+    public function storeReceipt(Request $request)
+    {
+        $data = $request->validate([
+            'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+        ]);
+        $user = $request->user();
+        $file = $data['receipt'];
+
+        Expense::create([
+            'user_id' => $user->id,
+            'entry_type' => 'receipt',
+            'title' => 'Receipt only',
+            'category' => 'Other',
+            'purchase_date' => now()->toDateString(),
+            'total_amount' => 0,
+            'payment_method' => 'Not provided',
+            'status' => 'pending',
+            'receipt_path' => $file->store("receipts/{$user->id}", 'public'),
+            'receipt_original_name' => $file->getClientOriginalName(),
+        ]);
+
+        return back()->with('status', 'Receipt uploaded.');
     }
 
     public function update(Request $request, Expense $expense)
@@ -138,6 +163,7 @@ class ExpenseController extends Controller
                         ->orWhere('vendor', 'like', "%{$search}%")
                         ->orWhere('notes', 'like', "%{$search}%")
                         ->orWhere('receipt_text', 'like', "%{$search}%")
+                        ->orWhere('receipt_original_name', 'like', "%{$search}%")
                         ->orWhereHas('material', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
                 });
             })
@@ -188,6 +214,7 @@ class ExpenseController extends Controller
 
         $attributes = [
             'user_id' => $user->id,
+            'entry_type' => 'expense',
             'site_project_id' => $data['site_project_id'] ?? null,
             'material_id' => $material->id,
             'title' => $material->name,
@@ -222,6 +249,7 @@ class ExpenseController extends Controller
     {
         return [
             'id' => $expense->id,
+            'entryType' => $expense->entry_type,
             'title' => $expense->title,
             'material' => $expense->material ? [
                 'id' => $expense->material->id,

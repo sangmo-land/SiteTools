@@ -14,7 +14,8 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $expenseBase = Expense::query()->where('user_id', $user->id);
+        $allEntries = Expense::query()->where('user_id', $user->id);
+        $expenseBase = (clone $allEntries)->where('entry_type', 'expense');
         $monthStart = now()->startOfMonth()->toDateString();
         $monthEnd = now()->endOfMonth()->toDateString();
 
@@ -33,7 +34,7 @@ class DashboardController extends Controller
                 'totalSpent' => $totalSpent,
                 'monthSpent' => $monthSpent,
                 'projectCount' => $user->siteProjects()->count(),
-                'receiptCount' => (clone $expenseBase)->whereNotNull('receipt_path')->count(),
+                'receiptCount' => (clone $allEntries)->whereNotNull('receipt_path')->count(),
                 'openProjectCount' => $user->siteProjects()->whereIn('status', ['planning', 'active', 'on_hold'])->count(),
             ],
             'recentExpenses' => (clone $expenseBase)
