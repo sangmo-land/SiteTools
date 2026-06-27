@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:10,1')
         ->name('tools.expenses.scan-receipt');
     Route::get('/tools/receipts/export', ReceiptExportController::class)->name('tools.receipts.export');
+    Route::get('/tools/receipts/{expense}/file', [ExpenseController::class, 'showReceipt'])->name('tools.receipts.show');
     Route::post('/tools/expenses', [ExpenseController::class, 'store'])->name('tools.expenses.store');
     Route::post('/tools/receipts', [ExpenseController::class, 'storeReceipt'])->name('tools.receipts.store');
     Route::patch('/tools/expenses/{expense}', [ExpenseController::class, 'update'])->name('tools.expenses.update');

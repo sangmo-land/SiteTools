@@ -189,6 +189,58 @@ class SiteToolsTest extends TestCase
         unlink($temporaryFile);
     }
 
+    public function test_owner_can_view_their_receipt_file(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        Storage::disk('public')->put('receipts/'.$user->id.'/supplier-receipt.jpg', 'image-bytes');
+
+        $expense = Expense::create([
+            'user_id' => $user->id,
+            'entry_type' => 'receipt',
+            'title' => 'Receipt - BuildMart',
+            'category' => 'Other',
+            'purchase_date' => '2026-06-23',
+            'total_amount' => 14500,
+            'payment_method' => 'Cash',
+            'status' => 'pending',
+            'receipt_path' => 'receipts/'.$user->id.'/supplier-receipt.jpg',
+            'receipt_original_name' => 'supplier-receipt.jpg',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('tools.receipts.show', $expense->id))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'inline; filename=supplier-receipt.jpg');
+    }
+
+    public function test_user_cannot_view_another_users_receipt(): void
+    {
+        Storage::fake('public');
+
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        Storage::disk('public')->put('receipts/'.$owner->id.'/supplier-receipt.jpg', 'image-bytes');
+
+        $expense = Expense::create([
+            'user_id' => $owner->id,
+            'entry_type' => 'receipt',
+            'title' => 'Receipt - BuildMart',
+            'category' => 'Other',
+            'purchase_date' => '2026-06-23',
+            'total_amount' => 14500,
+            'payment_method' => 'Cash',
+            'status' => 'pending',
+            'receipt_path' => 'receipts/'.$owner->id.'/supplier-receipt.jpg',
+            'receipt_original_name' => 'supplier-receipt.jpg',
+        ]);
+
+        $this->actingAs($other)
+            ->get(route('tools.receipts.show', $expense->id))
+            ->assertNotFound();
+    }
+
     public function test_receipt_only_upload_requires_a_receipt(): void
     {
         $user = User::factory()->create();

@@ -137,6 +137,20 @@ class ExpenseController extends Controller
         return back()->with('status', 'Receipt uploaded.');
     }
 
+    public function showReceipt(Request $request, Expense $expense)
+    {
+        abort_unless($expense->user_id === $request->user()->id, 404);
+
+        $disk = Storage::disk('public');
+
+        abort_unless($expense->receipt_path && $disk->exists($expense->receipt_path), 404);
+
+        return $disk->response(
+            $expense->receipt_path,
+            $expense->receipt_original_name,
+        );
+    }
+
     public function update(Request $request, Expense $expense)
     {
         $user = $request->user();
@@ -300,7 +314,7 @@ class ExpenseController extends Controller
             'totalAmount' => (float) $expense->total_amount,
             'paymentMethod' => $expense->payment_method,
             'status' => $expense->status,
-            'receiptUrl' => $expense->receipt_path ? asset('storage/'.$expense->receipt_path) : null,
+            'receiptUrl' => $expense->receipt_path ? route('tools.receipts.show', $expense->id, false) : null,
             'receiptOriginalName' => $expense->receipt_original_name,
             'receiptText' => $expense->receipt_text,
             'receiptConfidence' => $expense->receipt_confidence !== null ? (float) $expense->receipt_confidence : null,
