@@ -319,4 +319,20 @@ class SiteToolsTest extends TestCase
                 'message' => 'Amazon Textract is not configured yet.',
             ]);
     }
+
+    public function test_receipt_scanner_rejects_non_image_files_for_direct_textract_scan(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('tools.expenses.scan-receipt'), [
+                'receipt' => UploadedFile::fake()->create('receipt.txt', 100, 'text/plain'),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath(
+                'errors.receipt.0',
+                'Use a JPG or PNG receipt image. PDF/TIFF receipts need an S3-based Textract flow.',
+            );
+    }
 }

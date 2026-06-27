@@ -555,17 +555,17 @@ export default function Expenses({
                                     <Upload className="h-6 w-6" />
                                     <span className="font-semibold">
                                         {receiptOnlyForm.data.receipt?.name ||
-                                            'Choose receipt image or PDF'}
+                                            'Choose JPG or PNG receipt'}
                                     </span>
                                     <span className="text-xs text-cyan-700">
-                                        JPG, PNG, PDF, or TIFF up to 10 MB
+                                        JPG or PNG up to 5 MB
                                     </span>
                                     <input
                                         ref={receiptOnlyInputRef}
                                         onChange={handleReceiptOnlyChange}
                                         className="sr-only"
                                         type="file"
-                                        accept=".jpg,.jpeg,.png,.pdf,.tif,.tiff"
+                                        accept=".jpg,.jpeg,.png"
                                     />
                                 </label>
                             </FormField>
@@ -834,7 +834,7 @@ export default function Expenses({
                                     <Upload className="h-4 w-4 shrink-0" />
                                     <span className="truncate">
                                         {expenseForm.data.receipt?.name ||
-                                            'Attach receipt image or PDF'}
+                                            'Attach JPG or PNG receipt'}
                                     </span>
                                 </span>
                                 <input
@@ -842,7 +842,7 @@ export default function Expenses({
                                     onChange={handleReceiptChange}
                                     className="sr-only"
                                     type="file"
-                                    accept=".jpg,.jpeg,.png,.pdf,.tif,.tiff"
+                                    accept=".jpg,.jpeg,.png"
                                 />
                             </label>
                         </FormField>
@@ -868,7 +868,7 @@ export default function Expenses({
                             <p className="text-sm text-zinc-500">
                                 {computedTotal !== null
                                     ? `Calculated total: ${formatMoney(computedTotal)}`
-                                    : 'Amazon Textract can prefill vendor, date, total, and line items.'}
+                                    : 'Amazon Textract can prefill vendor, date, total, and line items from JPG/PNG receipts.'}
                             </p>
                             <button
                                 type="submit"
@@ -1266,7 +1266,7 @@ function ReceiptScanner({
                         Receipt scanner
                     </h2>
                     <p className="text-sm text-zinc-500">
-                        Amazon Textract expense analysis for images and PDFs
+                        Amazon Textract expense analysis for JPG/PNG receipts
                     </p>
                 </div>
             </div>
