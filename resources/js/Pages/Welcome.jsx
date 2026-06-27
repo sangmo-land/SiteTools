@@ -102,8 +102,21 @@ export default function Welcome({ auth }) {
                     </div>
                 </section>
 
-                <section className="bg-white py-10 text-zinc-950">
-                    <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+                <section className="bg-white py-14 text-zinc-950">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <p className="text-sm font-semibold text-emerald-700">
+                            Everything in one place
+                        </p>
+                        <h2 className="mt-2 max-w-2xl text-2xl font-semibold text-zinc-950 sm:text-3xl">
+                            Built for cost control on the site
+                        </h2>
+                        <p className="mt-3 max-w-2xl text-base text-zinc-600">
+                            From the first receipt to the final budget line,
+                            SiteTools keeps every purchase, supplier, and
+                            quantity in one auditable workspace.
+                        </p>
+                    </div>
+                    <div className="mx-auto mt-8 grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
                         <Feature
                             icon={ReceiptText}
                             title="Receipt capture"
@@ -130,6 +143,29 @@ export default function Welcome({ auth }) {
                         />
                     </div>
                 </section>
+
+                <footer className="border-t border-white/10 bg-zinc-950">
+                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6 lg:px-8">
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-600 text-white">
+                                <Construction className="h-4 w-4" />
+                            </span>
+                            <div>
+                                <p className="text-sm font-semibold text-white">
+                                    SiteTools
+                                </p>
+                                <p className="text-xs text-zinc-400">
+                                    Construction site expense &amp; field
+                                    operations
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-zinc-400">
+                            &copy; {new Date().getFullYear()} SiteTools. All
+                            rights reserved.
+                        </p>
+                    </div>
+                </footer>
             </div>
         </>
     );

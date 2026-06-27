@@ -42,7 +42,7 @@ export default function AuthenticatedLayout({ header, children }) {
     ];
 
     return (
-        <div className="site-app-bg min-h-screen text-zinc-950">
+        <div className="site-app-bg flex min-h-screen flex-col text-zinc-950">
             <nav className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 shadow-sm backdrop-blur-xl">
                 <div className="workline h-1" />
                 <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -163,9 +163,28 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
-            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
                 {children}
             </main>
+
+            <footer className="mt-8 border-t border-zinc-200 bg-white/70 backdrop-blur">
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-zinc-500 sm:flex-row sm:px-6 lg:px-8">
+                    <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded bg-emerald-600 text-white">
+                            <Construction className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="font-medium text-zinc-700">
+                            SiteTools
+                        </span>
+                        <span aria-hidden="true">&middot;</span>
+                        <span>
+                            &copy; {new Date().getFullYear()} All rights
+                            reserved
+                        </span>
+                    </div>
+                    <p>Construction site expense &amp; field operations</p>
+                </div>
+            </footer>
         </div>
     );
 }
