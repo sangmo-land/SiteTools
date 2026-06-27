@@ -125,6 +125,24 @@ class SiteToolsTest extends TestCase
         $this->assertSame('Cement', $receipt->receipt_items[0]['description']);
         $this->assertSame('supplier-receipt.jpg', $receipt->receipt_original_name);
         Storage::disk('public')->assertExists($receipt->receipt_path);
+
+        $this->actingAs($user)
+            ->get(route('tools.expenses'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('summary.total', 14500)
+                ->where('summary.count', 1)
+                ->where('summary.average', 14500)
+                ->where('expenses.data.0.entryType', 'receipt'));
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.totalSpent', 14500)
+                ->where('stats.monthSpent', 14500)
+                ->where('stats.receiptCount', 1)
+                ->where('recentExpenses.0.title', 'Receipt - BuildMart'));
     }
 
     public function test_user_can_export_ocr_receipts_to_excel(): void
