@@ -1324,6 +1324,7 @@ function ReceiptScanner({
                         <thead className="bg-zinc-50 text-left text-xs font-semibold text-zinc-500">
                             <tr>
                                 <th className="px-3 py-2">Item</th>
+                                <th className="px-3 py-2">Catalog match</th>
                                 <th className="px-3 py-2">Qty</th>
                                 <th className="px-3 py-2">Total</th>
                             </tr>
@@ -1334,8 +1335,14 @@ function ReceiptScanner({
                                     <td className="px-3 py-2 text-zinc-800">
                                         {item.description}
                                     </td>
+                                    <td className="px-3 py-2">
+                                        <CatalogMatch item={item} />
+                                    </td>
                                     <td className="px-3 py-2 text-zinc-600">
                                         {item.quantity ?? '-'}
+                                        {item.normalized_unit
+                                            ? ` ${item.normalized_unit}`
+                                            : ''}
                                     </td>
                                     <td className="px-3 py-2 font-medium text-zinc-800">
                                         {formatReceiptAmount(
@@ -1366,6 +1373,37 @@ function formatReceiptAmount(value, currency) {
     }
 
     return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(Number(value))}${currency ? ` ${currency}` : ''}`;
+}
+
+function CatalogMatch({ item }) {
+    const confidence =
+        item.match_confidence !== null && item.match_confidence !== undefined
+            ? Math.round(Number(item.match_confidence) * 100)
+            : null;
+
+    if (item.material_name) {
+        return (
+            <span className="inline-flex items-center gap-1.5">
+                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                    {item.material_name}
+                </span>
+                {confidence !== null && (
+                    <span className="text-xs text-zinc-400">{confidence}%</span>
+                )}
+            </span>
+        );
+    }
+
+    if (item.canonical_name) {
+        return (
+            <span className="text-xs text-zinc-500">
+                {item.canonical_name}
+                <span className="ml-1 text-zinc-400">(unmatched)</span>
+            </span>
+        );
+    }
+
+    return <span className="text-xs text-zinc-400">-</span>;
 }
 
 function SummaryCard({ label, value, icon: Icon, accent }) {

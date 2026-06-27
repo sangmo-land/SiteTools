@@ -48,6 +48,7 @@ return array(
     'Symfony\\Component\\CssSelector\\' => array($vendorDir . '/symfony/css-selector'),
     'Symfony\\Component\\Console\\' => array($vendorDir . '/symfony/console'),
     'Symfony\\Component\\Clock\\' => array($vendorDir . '/symfony/clock'),
+    'StandardWebhooks\\' => array($vendorDir . '/standard-webhooks/standard-webhooks/libraries/php/src'),
     'Spatie\\ShikiPhp\\' => array($vendorDir . '/spatie/shiki-php/src'),
     'Spatie\\LaravelPackageTools\\' => array($vendorDir . '/spatie/laravel-package-tools/src'),
     'Spatie\\Invade\\' => array($vendorDir . '/spatie/invade/src'),
@@ -98,6 +99,7 @@ return array(
     'Inertia\\' => array($vendorDir . '/inertiajs/inertia-laravel/src'),
     'Illuminate\\Support\\' => array($vendorDir . '/laravel/framework/src/Illuminate/Macroable', $vendorDir . '/laravel/framework/src/Illuminate/Collections', $vendorDir . '/laravel/framework/src/Illuminate/Conditionable', $vendorDir . '/laravel/framework/src/Illuminate/Reflection'),
     'Illuminate\\' => array($vendorDir . '/laravel/framework/src/Illuminate'),
+    'Http\\Discovery\\' => array($vendorDir . '/php-http/discovery/src'),
     'GuzzleHttp\\UriTemplate\\' => array($vendorDir . '/guzzlehttp/uri-template/src'),
     'GuzzleHttp\\Psr7\\' => array($vendorDir . '/guzzlehttp/psr7/src'),
     'GuzzleHttp\\Promise\\' => array($vendorDir . '/guzzlehttp/promises/src'),
@@ -135,4 +137,5 @@ return array(
     'BladeUI\\Heroicons\\' => array($vendorDir . '/blade-ui-kit/blade-heroicons/src'),
     'Aws\\' => array($vendorDir . '/aws/aws-sdk-php/src'),
     'App\\' => array($baseDir . '/app', $vendorDir . '/laravel/pint/app'),
+    'Anthropic\\' => array($vendorDir . '/anthropic-ai/sdk/src'),
 );

@@ -238,6 +238,11 @@ class ExpenseController extends Controller
             'receipt_items.*.quantity' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'receipt_items.*.unit_price' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'receipt_items.*.total' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'receipt_items.*.material_id' => ['nullable', 'integer'],
+            'receipt_items.*.material_name' => ['nullable', 'string', 'max:160'],
+            'receipt_items.*.canonical_name' => ['nullable', 'string', 'max:255'],
+            'receipt_items.*.normalized_unit' => ['nullable', 'string', 'max:30'],
+            'receipt_items.*.match_confidence' => ['nullable', 'numeric', 'min:0', 'max:1'],
             'receipt_text' => ['nullable', 'string', 'max:65000'],
             'receipt_confidence' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];

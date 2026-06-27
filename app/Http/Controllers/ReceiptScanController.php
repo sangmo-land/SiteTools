@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
 use App\Services\AmazonTextractReceiptScanner;
+use App\Services\ClaudeLineItemClassifier;
 use Aws\Exception\AwsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,8 +13,11 @@ use Throwable;
 
 class ReceiptScanController extends Controller
 {
-    public function __invoke(Request $request, AmazonTextractReceiptScanner $scanner): JsonResponse
-    {
+    public function __invoke(
+        Request $request,
+        AmazonTextractReceiptScanner $scanner,
+        ClaudeLineItemClassifier $classifier,
+    ): JsonResponse {
         $validator = Validator::make($request->all(), [
             'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ], [
@@ -36,7 +41,10 @@ class ReceiptScanController extends Controller
         }
 
         try {
-            return response()->json($scanner->scan($data['receipt']));
+            $scan = $scanner->scan($data['receipt']);
+            $scan['items'] = $classifier->classify($scan['items'] ?? [], $this->materialCatalog());
+
+            return response()->json($scan);
         } catch (AwsException $exception) {
             report($exception);
 
@@ -50,6 +58,27 @@ class ReceiptScanController extends Controller
                 'message' => 'Amazon Textract could not read this receipt. Please try a clearer image or enter the details manually.',
             ], 502);
         }
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function materialCatalog(): array
+    {
+        if (! app(ClaudeLineItemClassifier::class)->isConfigured()) {
+            return [];
+        }
+
+        return Material::query()
+            ->where('is_active', true)
+            ->get(['id', 'name', 'category', 'unit'])
+            ->map(fn (Material $material): array => [
+                'id' => $material->id,
+                'name' => $material->name,
+                'category' => $material->category,
+                'unit' => $material->unit,
+            ])
+            ->all();
     }
 
     private function messageForAwsException(AwsException $exception): string

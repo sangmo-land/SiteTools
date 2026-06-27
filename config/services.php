@@ -30,6 +30,11 @@ return [
         'endpoint' => env('AWS_TEXTRACT_ENDPOINT'),
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-4-8'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
