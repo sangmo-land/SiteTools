@@ -5,6 +5,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     Banknote,
     CalendarDays,
+    ChevronDown,
     Eye,
     FileImage,
     FileSpreadsheet,
@@ -84,6 +85,14 @@ export default function Expenses({
         from: filters.from || '',
         to: filters.to || '',
     });
+    const [showFilters, setShowFilters] = useState(() =>
+        ['category', 'material', 'project', 'status', 'from', 'to'].some(
+            (key) => (filters[key] || '') !== '',
+        ),
+    );
+    const activeFilterCount = Object.values(filterData).filter(
+        (value) => value !== '',
+    ).length;
 
     const firstMaterial = materials[0] || null;
     const defaultExpenseForm = useMemo(
@@ -365,129 +374,153 @@ export default function Expenses({
                 onSubmit={applyFilters}
                 className="mt-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
             >
-                <div className="grid gap-3 lg:grid-cols-[1.35fr_repeat(6,minmax(0,1fr))_auto]">
-                    <FieldShell icon={Search}>
-                        <input
-                            value={filterData.search}
-                            onChange={(event) =>
-                                setFilterData((current) => ({
-                                    ...current,
-                                    search: event.target.value,
-                                }))
-                            }
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                            placeholder="Search vendor, material, receipt text"
-                            type="search"
-                        />
-                    </FieldShell>
-                    <select
-                        value={filterData.category}
-                        onChange={(event) =>
-                            setFilterData((current) => ({
-                                ...current,
-                                category: event.target.value,
-                            }))
-                        }
-                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    >
-                        <option value="">All categories</option>
-                        {categories.map((category) => (
-                            <option key={category} value={category}>
-                                {category}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        value={filterData.material}
-                        onChange={(event) =>
-                            setFilterData((current) => ({
-                                ...current,
-                                material: event.target.value,
-                            }))
-                        }
-                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    >
-                        <option value="">All materials</option>
-                        {materials.map((material) => (
-                            <option key={material.id} value={material.id}>
-                                {material.name}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        value={filterData.project}
-                        onChange={(event) =>
-                            setFilterData((current) => ({
-                                ...current,
-                                project: event.target.value,
-                            }))
-                        }
-                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    >
-                        <option value="">All projects</option>
-                        {projects.map((project) => (
-                            <option key={project.id} value={project.id}>
-                                {project.name}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        value={filterData.status}
-                        onChange={(event) =>
-                            setFilterData((current) => ({
-                                ...current,
-                                status: event.target.value,
-                            }))
-                        }
-                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    >
-                        <option value="">All statuses</option>
-                        {statuses.map((status) => (
-                            <option key={status} value={status}>
-                                {statusLabels[status]}
-                            </option>
-                        ))}
-                    </select>
-                    <input
-                        value={filterData.from}
-                        onChange={(event) =>
-                            setFilterData((current) => ({
-                                ...current,
-                                from: event.target.value,
-                            }))
-                        }
-                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                        type="date"
-                    />
-                    <input
-                        value={filterData.to}
-                        onChange={(event) =>
-                            setFilterData((current) => ({
-                                ...current,
-                                to: event.target.value,
-                            }))
-                        }
-                        className="rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                        type="date"
-                    />
-                    <div className="flex gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex-1">
+                        <FieldShell icon={Search}>
+                            <input
+                                value={filterData.search}
+                                onChange={(event) =>
+                                    setFilterData((current) => ({
+                                        ...current,
+                                        search: event.target.value,
+                                    }))
+                                }
+                                className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                placeholder="Search vendor, material, receipt text"
+                                type="search"
+                            />
+                        </FieldShell>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
                         <button
-                            type="submit"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                            aria-label="Apply filters"
-                            title="Apply filters"
+                            type="button"
+                            onClick={() => setShowFilters((open) => !open)}
+                            aria-expanded={showFilters}
+                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
                         >
                             <Filter className="h-4 w-4" />
+                            Filters
+                            {activeFilterCount > 0 && (
+                                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-emerald-600 px-1.5 text-xs font-semibold text-white">
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                            <ChevronDown
+                                className={`h-4 w-4 text-zinc-400 transition ${showFilters ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+                        <button
+                            type="submit"
+                            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        >
+                            Apply
                         </button>
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
                         >
                             Clear
                         </button>
                     </div>
                 </div>
+
+                {showFilters && (
+                    <div className="mt-3 grid gap-3 border-t border-zinc-100 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                        <select
+                            value={filterData.category}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    category: event.target.value,
+                                }))
+                            }
+                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        >
+                            <option value="">All categories</option>
+                            {categories.map((category) => (
+                                <option key={category} value={category}>
+                                    {category}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={filterData.material}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    material: event.target.value,
+                                }))
+                            }
+                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        >
+                            <option value="">All materials</option>
+                            {materials.map((material) => (
+                                <option key={material.id} value={material.id}>
+                                    {material.name}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={filterData.project}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    project: event.target.value,
+                                }))
+                            }
+                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        >
+                            <option value="">All projects</option>
+                            {projects.map((project) => (
+                                <option key={project.id} value={project.id}>
+                                    {project.name}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={filterData.status}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    status: event.target.value,
+                                }))
+                            }
+                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        >
+                            <option value="">All statuses</option>
+                            {statuses.map((status) => (
+                                <option key={status} value={status}>
+                                    {statusLabels[status]}
+                                </option>
+                            ))}
+                        </select>
+                        <input
+                            value={filterData.from}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    from: event.target.value,
+                                }))
+                            }
+                            aria-label="From date"
+                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            type="date"
+                        />
+                        <input
+                            value={filterData.to}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    to: event.target.value,
+                                }))
+                            }
+                            aria-label="To date"
+                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            type="date"
+                        />
+                    </div>
+                )}
             </form>
 
             <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.78fr]">
