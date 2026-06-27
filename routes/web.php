@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReceiptExportController;
+use App\Http\Controllers\ReceiptQueryController;
 use App\Http\Controllers\ReceiptScanController;
 use App\Http\Controllers\SiteProjectController;
 use Illuminate\Foundation\Application;
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tools/expenses/scan-receipt', ReceiptScanController::class)
         ->middleware('throttle:10,1')
         ->name('tools.expenses.scan-receipt');
+    Route::post('/tools/receipts/query', ReceiptQueryController::class)
+        ->middleware('throttle:20,1')
+        ->name('tools.receipts.query');
     Route::get('/tools/receipts/export', ReceiptExportController::class)->name('tools.receipts.export');
     Route::get('/tools/receipts/{expense}/file', [ExpenseController::class, 'showReceipt'])->name('tools.receipts.show');
     Route::post('/tools/expenses', [ExpenseController::class, 'store'])->name('tools.expenses.store');

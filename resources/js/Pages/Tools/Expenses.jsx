@@ -15,6 +15,8 @@ import {
     Plus,
     ReceiptText,
     Search,
+    Send,
+    Sparkles,
     Trash2,
     Upload,
     WalletCards,
@@ -1033,6 +1035,8 @@ export default function Expenses({
                 </div>
             </div>
 
+            <ReceiptAssistant />
+
             <section className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
                 <div className="flex flex-col gap-2 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -1433,6 +1437,127 @@ function CatalogMatch({ item }) {
     }
 
     return <span className="text-xs text-zinc-400">-</span>;
+}
+
+function ReceiptAssistant() {
+    const [question, setQuestion] = useState('');
+    const [state, setState] = useState({
+        status: 'idle',
+        answer: '',
+        error: '',
+        count: null,
+    });
+
+    const ask = async (event) => {
+        event.preventDefault();
+        const trimmed = question.trim();
+
+        if (!trimmed || state.status === 'loading') {
+            return;
+        }
+
+        setState({ status: 'loading', answer: '', error: '', count: null });
+
+        try {
+            const response = await window.axios.post(
+                route('tools.receipts.query'),
+                { question: trimmed },
+                { headers: { Accept: 'application/json' } },
+            );
+
+            setState({
+                status: 'done',
+                answer: response.data.answer || '',
+                error: '',
+                count: response.data.recordCount ?? null,
+            });
+        } catch (error) {
+            setState({
+                status: 'error',
+                answer: '',
+                error:
+                    error.response?.data?.message ||
+                    'The assistant could not answer that. Please try again.',
+                count: null,
+            });
+        }
+    };
+
+    const examples = [
+        'How much did I spend on cement last month?',
+        'Which vendor did I spend the most with?',
+        'List all pending receipts and their totals.',
+    ];
+
+    return (
+        <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
+                    <Sparkles className="h-5 w-5" />
+                </span>
+                <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                        Ask about your receipts
+                    </h2>
+                    <p className="text-sm text-zinc-500">
+                        Plain-language answers drawn from your scanned receipts
+                        and recorded purchases
+                    </p>
+                </div>
+            </div>
+
+            <form onSubmit={ask} className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <input
+                    value={question}
+                    onChange={(event) => setQuestion(event.target.value)}
+                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    placeholder="e.g. How much did I spend on cement last month?"
+                    type="text"
+                />
+                <button
+                    type="submit"
+                    disabled={state.status === 'loading' || !question.trim()}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                >
+                    <Send className="h-4 w-4" />
+                    {state.status === 'loading' ? 'Thinking…' : 'Ask'}
+                </button>
+            </form>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+                {examples.map((example) => (
+                    <button
+                        key={example}
+                        type="button"
+                        onClick={() => setQuestion(example)}
+                        className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600 transition hover:border-zinc-300 hover:bg-zinc-50"
+                    >
+                        {example}
+                    </button>
+                ))}
+            </div>
+
+            {state.status === 'error' && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                    {state.error}
+                </div>
+            )}
+
+            {state.status === 'done' && state.answer && (
+                <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                    <p className="whitespace-pre-wrap text-sm text-zinc-800">
+                        {state.answer}
+                    </p>
+                    {state.count !== null && (
+                        <p className="mt-3 text-xs text-zinc-400">
+                            Based on {state.count} record
+                            {state.count === 1 ? '' : 's'}.
+                        </p>
+                    )}
+                </div>
+            )}
+        </section>
+    );
 }
 
 function SummaryCard({ label, value, icon: Icon }) {
