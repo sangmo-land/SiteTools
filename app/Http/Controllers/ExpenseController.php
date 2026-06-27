@@ -45,7 +45,6 @@ class ExpenseController extends Controller
     {
         $user = $request->user();
         $summaryQuery = $this->filteredExpenseQuery($request, $user);
-        $spendingSummaryQuery = (clone $summaryQuery)->where('entry_type', 'expense');
 
         $expenses = $this->filteredExpenseQuery($request, $user)
             ->with(['material', 'siteProject'])
@@ -84,9 +83,9 @@ class ExpenseController extends Controller
             'statuses' => self::STATUSES,
             'filters' => $request->only(['search', 'category', 'material', 'project', 'status', 'from', 'to']),
             'summary' => [
-                'total' => (float) (clone $spendingSummaryQuery)->sum('total_amount'),
+                'total' => (float) (clone $summaryQuery)->sum('total_amount'),
                 'count' => (clone $summaryQuery)->count(),
-                'average' => (float) ((clone $spendingSummaryQuery)->avg('total_amount') ?? 0),
+                'average' => (float) ((clone $summaryQuery)->avg('total_amount') ?? 0),
                 'withReceipts' => (clone $summaryQuery)->whereNotNull('receipt_path')->count(),
             ],
         ]);

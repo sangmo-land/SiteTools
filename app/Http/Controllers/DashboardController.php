@@ -15,17 +15,16 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $allEntries = Expense::query()->where('user_id', $user->id);
-        $expenseBase = (clone $allEntries)->where('entry_type', 'expense');
         $monthStart = now()->startOfMonth()->toDateString();
         $monthEnd = now()->endOfMonth()->toDateString();
 
-        $totalSpent = (float) (clone $expenseBase)->sum('total_amount');
-        $monthSpent = (float) (clone $expenseBase)
+        $totalSpent = (float) (clone $allEntries)->sum('total_amount');
+        $monthSpent = (float) (clone $allEntries)
             ->whereBetween('purchase_date', [$monthStart, $monthEnd])
             ->sum('total_amount');
 
         $recentMonths = collect(range(5, 0))->map(fn (int $offset) => now()->subMonths($offset)->startOfMonth());
-        $monthlyRows = (clone $expenseBase)
+        $monthlyRows = (clone $allEntries)
             ->where('purchase_date', '>=', $recentMonths->first()->toDateString())
             ->get(['purchase_date', 'total_amount']);
 
@@ -37,14 +36,14 @@ class DashboardController extends Controller
                 'receiptCount' => (clone $allEntries)->whereNotNull('receipt_path')->count(),
                 'openProjectCount' => $user->siteProjects()->whereIn('status', ['planning', 'active', 'on_hold'])->count(),
             ],
-            'recentExpenses' => (clone $expenseBase)
+            'recentExpenses' => (clone $allEntries)
                 ->with('siteProject')
                 ->latest('purchase_date')
                 ->latest()
                 ->limit(7)
                 ->get()
                 ->map(fn (Expense $expense) => $this->serializeExpense($expense)),
-            'categoryTotals' => (clone $expenseBase)
+            'categoryTotals' => (clone $allEntries)
                 ->select('category', DB::raw('SUM(total_amount) as total'))
                 ->groupBy('category')
                 ->orderByDesc('total')
