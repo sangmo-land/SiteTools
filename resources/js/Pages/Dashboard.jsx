@@ -126,9 +126,9 @@ export default function Dashboard({
                             Live site picture
                         </p>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-200">
-                            Your spend, receipts, and project budgets now sit
-                            on one colorful operations layer, so the page feels
-                            closer to a control room than a static ledger.
+                            Spend, receipts, and project budgets in one place,
+                            updated as each purchase is recorded—so you can see
+                            where the money is going across every active site.
                         </p>
                     </div>
                     <div className="soft-stripes grid grid-cols-3 gap-3 bg-emerald-600 p-5 text-white">

@@ -127,10 +127,10 @@ export default function Calculators() {
                     icon={Cuboid}
                     accent="emerald"
                     result={[
-                        ['Concrete', `${concreteResult.volume} m3`],
+                        ['Concrete', `${concreteResult.volume} m³`],
                         ['Cement', `${concreteResult.cementBags} bags`],
-                        ['Sand', `${concreteResult.sand} m3`],
-                        ['Aggregate', `${concreteResult.aggregate} m3`],
+                        ['Sand', `${concreteResult.sand} m³`],
+                        ['Aggregate', `${concreteResult.aggregate} m³`],
                     ]}
                 >
                     <NumberInput
@@ -183,7 +183,7 @@ export default function Calculators() {
                     icon={SquareStack}
                     accent="amber"
                     result={[
-                        ['Wall area', `${blockResult.wallArea} m2`],
+                        ['Wall area', `${blockResult.wallArea} m²`],
                         ['Blocks', `${blockResult.blocks} pcs`],
                         ['Mortar cement', `${blockResult.mortarBags} bags`],
                     ]}
@@ -209,7 +209,7 @@ export default function Calculators() {
                         }
                     />
                     <NumberInput
-                        label="Openings (m2)"
+                        label="Openings (m²)"
                         value={blocks.openings}
                         onChange={(value) =>
                             setBlocks((current) => ({
@@ -242,7 +242,7 @@ export default function Calculators() {
                     ]}
                 >
                     <NumberInput
-                        label="Surface area (m2)"
+                        label="Surface area (m²)"
                         value={paint.area}
                         onChange={(value) =>
                             setPaint((current) => ({
@@ -252,7 +252,7 @@ export default function Calculators() {
                         }
                     />
                     <NumberInput
-                        label="Coverage (m2/L)"
+                        label="Coverage (m²/L)"
                         value={paint.coverage}
                         onChange={(value) =>
                             setPaint((current) => ({
@@ -332,8 +332,8 @@ export default function Calculators() {
                                 </option>
                                 <option value="kgToTons">Kg to tons</option>
                                 <option value="tonsToKg">Tons to kg</option>
-                                <option value="sqmToSqft">m2 to ft2</option>
-                                <option value="sqftToSqm">ft2 to m2</option>
+                                <option value="sqmToSqft">m² to ft²</option>
+                                <option value="sqftToSqm">ft² to m²</option>
                             </select>
                         </label>
                     </div>
