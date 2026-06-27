@@ -303,31 +303,31 @@ export default function Expenses({
             header={
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <p className="text-sm font-medium text-emerald-700">
+                        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                             Expense tracker
                         </p>
-                        <h1 className="mt-1 text-2xl font-semibold text-zinc-950">
+                        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
                             Site purchases and receipts
                         </h1>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <a
                             href={route('tools.receipts.export')}
-                            className="inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2"
                         >
                             <FileSpreadsheet className="h-4 w-4" />
                             Export receipt Excel
                         </a>
                         <a
                             href="/admin/materials"
-                            className="inline-flex items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-900 shadow-sm transition hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2"
                         >
                             <PackageSearch className="h-4 w-4" />
                             Manage materials
                         </a>
                         <Link
                             href={route('tools.calculators')}
-                            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                         >
                             <WalletCards className="h-4 w-4" />
                             Open calculators
@@ -343,31 +343,27 @@ export default function Expenses({
                     label="Filtered total"
                     value={formatMoney(summary.total)}
                     icon={Banknote}
-                    accent="emerald"
                 />
                 <SummaryCard
                     label="Entries"
                     value={summary.count}
                     icon={ReceiptText}
-                    accent="cyan"
                 />
                 <SummaryCard
                     label="Average spend"
                     value={formatMoney(summary.average)}
                     icon={WalletCards}
-                    accent="amber"
                 />
                 <SummaryCard
                     label="With receipts"
                     value={summary.withReceipts}
                     icon={FileImage}
-                    accent="rose"
                 />
             </div>
 
             <form
                 onSubmit={applyFilters}
-                className="panel-card lift-in mt-6 rounded-lg p-4"
+                className="mt-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
             >
                 <div className="grid gap-3 lg:grid-cols-[1.35fr_repeat(6,minmax(0,1fr))_auto]">
                     <FieldShell icon={Search}>
@@ -477,7 +473,7 @@ export default function Expenses({
                     <div className="flex gap-2">
                         <button
                             type="submit"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-emerald-600 text-white shadow-md shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                             aria-label="Apply filters"
                             title="Apply filters"
                         >
@@ -486,7 +482,7 @@ export default function Expenses({
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="rounded-md border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+                            className="rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
                         >
                             Clear
                         </button>
@@ -495,9 +491,9 @@ export default function Expenses({
             </form>
 
             <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.78fr]">
-                <section className="panel-card lift-in rounded-lg p-5">
+                <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
                             <Plus className="h-5 w-5" />
                         </span>
                         <div>
@@ -517,8 +513,8 @@ export default function Expenses({
                             onClick={() => setUploadMode('receipt')}
                             className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                                 uploadMode === 'receipt'
-                                    ? 'bg-white text-cyan-800 shadow-sm'
-                                    : 'text-zinc-600 hover:text-zinc-950'
+                                    ? 'bg-white text-zinc-900 shadow-sm'
+                                    : 'text-zinc-500 hover:text-zinc-900'
                             }`}
                         >
                             Receipt only
@@ -528,8 +524,8 @@ export default function Expenses({
                             onClick={() => setUploadMode('expense')}
                             className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                                 uploadMode === 'expense'
-                                    ? 'bg-white text-emerald-800 shadow-sm'
-                                    : 'text-zinc-600 hover:text-zinc-950'
+                                    ? 'bg-white text-zinc-900 shadow-sm'
+                                    : 'text-zinc-500 hover:text-zinc-900'
                             }`}
                         >
                             Full expense
@@ -541,7 +537,7 @@ export default function Expenses({
                             onSubmit={submitReceiptOnly}
                             className="mt-5 space-y-5"
                         >
-                            <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-950">
+                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
                                 Choose a receipt. OCR will read its supplier,
                                 date, totals, and line items for the Excel
                                 export—no manual purchase details are required.
@@ -551,13 +547,13 @@ export default function Expenses({
                                 label="Receipt"
                                 error={receiptOnlyForm.errors.receipt}
                             >
-                                <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-cyan-300 bg-cyan-50/50 px-4 py-6 text-center text-sm text-cyan-900 transition hover:border-cyan-500 hover:bg-cyan-50">
+                                <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 transition hover:border-emerald-400 hover:bg-emerald-50/50">
                                     <Upload className="h-6 w-6" />
-                                    <span className="font-semibold">
+                                    <span className="font-medium text-zinc-900">
                                         {receiptOnlyForm.data.receipt?.name ||
                                             'Choose JPG or PNG receipt'}
                                     </span>
-                                    <span className="text-xs text-cyan-700">
+                                    <span className="text-xs text-zinc-500">
                                         JPG or PNG up to 5 MB
                                     </span>
                                     <input
@@ -578,7 +574,7 @@ export default function Expenses({
                                         !receiptOnlyForm.data.receipt ||
                                         receiptOnlyOcrState.status === 'scanning'
                                     }
-                                    className="inline-flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-700/20 transition hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                                 >
                                     <Upload className="h-4 w-4" />
                                     Upload receipt
@@ -730,7 +726,7 @@ export default function Expenses({
                         </div>
 
                         {selectedMaterial && (
-                            <div className="soft-stripes grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm md:grid-cols-3">
+                            <div className="grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm md:grid-cols-3">
                                 <MaterialMeta
                                     label="Category"
                                     value={selectedMaterial.category}
@@ -876,7 +872,7 @@ export default function Expenses({
                                     expenseForm.processing ||
                                     !materials.length
                                 }
-                                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                             >
                                 <Plus className="h-4 w-4" />
                                 Save purchase
@@ -921,9 +917,9 @@ export default function Expenses({
                         }
                     />
 
-                    <section className="panel-card lift-in rounded-lg p-5">
+                    <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-50 text-amber-700">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
                                 <FolderPlus className="h-5 w-5" />
                             </span>
                             <div>
@@ -994,7 +990,7 @@ export default function Expenses({
                             <button
                                 type="submit"
                                 disabled={projectForm.processing}
-                                className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 disabled:opacity-50"
+                                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
                             >
                                 <FolderPlus className="h-4 w-4" />
                                 Create project
@@ -1004,7 +1000,7 @@ export default function Expenses({
                 </div>
             </div>
 
-            <section className="panel-card lift-in mt-6 rounded-lg shadow-sm">
+            <section className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
                 <div className="flex flex-col gap-2 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-base font-semibold text-zinc-950">
@@ -1038,7 +1034,7 @@ export default function Expenses({
                                 expenses.data.map((expense) => (
                                     <tr
                                         key={expense.id}
-                                        className="transition hover:bg-emerald-50/40"
+                                        className="transition hover:bg-zinc-50"
                                     >
                                         <TableCell>
                                             <p className="font-semibold text-zinc-950">
@@ -1256,9 +1252,9 @@ function ReceiptScanner({
     ].filter(([, value]) => value !== null && value !== undefined && value !== '');
 
     return (
-        <section className="panel-card lift-in rounded-lg p-5">
+        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
                     <FileImage className="h-5 w-5" />
                 </span>
                 <div>
@@ -1297,17 +1293,17 @@ function ReceiptScanner({
                 </div>
                 <div className="mt-2 h-2 rounded-md bg-zinc-100">
                     <div
-                        className="h-2 rounded-md bg-cyan-600 transition-all"
+                        className="h-2 rounded-md bg-emerald-600 transition-all"
                         style={{ width: `${ocrState.progress}%` }}
                     />
                 </div>
             </div>
 
             {extractedFields.length > 0 && (
-                <div className="mt-4 grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 sm:grid-cols-2">
                     {extractedFields.map(([label, value]) => (
                         <div key={label}>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                                 {label}
                             </p>
                             <p className="mt-1 break-words text-sm font-semibold text-zinc-950">
@@ -1406,47 +1402,22 @@ function CatalogMatch({ item }) {
     return <span className="text-xs text-zinc-400">-</span>;
 }
 
-function SummaryCard({ label, value, icon: Icon, accent }) {
-    const colorMap = {
-        emerald: {
-            card: 'border-emerald-200 bg-emerald-50/70',
-            icon: 'bg-emerald-600 text-white shadow-emerald-700/20',
-        },
-        cyan: {
-            card: 'border-cyan-200 bg-cyan-50/70',
-            icon: 'bg-cyan-600 text-white shadow-cyan-700/20',
-        },
-        amber: {
-            card: 'border-amber-200 bg-amber-50/70',
-            icon: 'bg-amber-500 text-white shadow-amber-700/20',
-        },
-        rose: {
-            card: 'border-rose-200 bg-rose-50/70',
-            icon: 'bg-rose-500 text-white shadow-rose-700/20',
-        },
-    };
-    const colors = colorMap[accent];
-
+function SummaryCard({ label, value, icon: Icon }) {
     return (
-        <section
-            className={`lift-in overflow-hidden rounded-lg border p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${colors.card}`}
-        >
+        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <p className="text-sm font-medium text-zinc-600">
+                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                         {label}
                     </p>
-                    <p className="mt-2 text-2xl font-semibold text-zinc-950">
+                    <p className="mt-2 text-2xl font-semibold text-zinc-900">
                         {value}
                     </p>
                 </div>
-                <span
-                    className={`flex h-11 w-11 items-center justify-center rounded-md shadow-lg ${colors.icon}`}
-                >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500">
                     <Icon className="h-5 w-5" />
                 </span>
             </div>
-            <div className="workline mt-5 h-1 rounded-md" />
         </section>
     );
 }
