@@ -189,6 +189,69 @@ class SiteToolsTest extends TestCase
         unlink($temporaryFile);
     }
 
+    public function test_user_can_download_an_assistant_table_as_excel(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tools.receipts.report'), [
+            'format' => 'xlsx',
+            'title' => 'Pending receipts',
+            'columns' => ['Date', 'Vendor', 'Total'],
+            'rows' => [
+                ['2026-06-23', 'BuildMart', '14 500 FCFA'],
+                ['Total', '', '14 500 FCFA'],
+            ],
+        ]);
+
+        $response->assertOk()
+            ->assertDownload('pending-receipts-'.now()->format('Y-m-d').'.xlsx');
+
+        $temporaryFile = tempnam(sys_get_temp_dir(), 'receipt-report-');
+        file_put_contents($temporaryFile, $response->streamedContent());
+        $spreadsheet = IOFactory::load($temporaryFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $this->assertSame('Vendor', $sheet->getCell('B1')->getValue());
+        $this->assertSame('BuildMart', $sheet->getCell('B2')->getValue());
+        $this->assertSame('14 500 FCFA', $sheet->getCell('C3')->getValue());
+
+        $spreadsheet->disconnectWorksheets();
+        unlink($temporaryFile);
+    }
+
+    public function test_user_can_download_an_assistant_table_as_pdf(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tools.receipts.report'), [
+            'format' => 'pdf',
+            'title' => 'Pending receipts',
+            'columns' => ['Date', 'Vendor', 'Total'],
+            'rows' => [['2026-06-23', 'BuildMart', '14 500 FCFA']],
+        ]);
+
+        $response->assertOk();
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+        $this->assertStringContainsString(
+            'pending-receipts-'.now()->format('Y-m-d').'.pdf',
+            (string) $response->headers->get('content-disposition'),
+        );
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    public function test_report_export_rejects_an_unsupported_format(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('tools.receipts.report'), [
+                'format' => 'docx',
+                'columns' => ['Date'],
+                'rows' => [['2026-06-23']],
+            ])
+            ->assertSessionHasErrors('format');
+    }
+
     public function test_owner_can_view_their_receipt_file(): void
     {
         Storage::fake('public');

@@ -6,9 +6,11 @@ import {
     Banknote,
     CalendarDays,
     ChevronDown,
+    Download,
     Eye,
     FileImage,
     FileSpreadsheet,
+    FileText,
     Filter,
     FolderPlus,
     PackageSearch,
@@ -1446,7 +1448,9 @@ function ReceiptAssistant() {
         answer: '',
         error: '',
         count: null,
+        table: null,
     });
+    const [download, setDownload] = useState({ format: null, error: '' });
 
     const ask = async (event) => {
         event.preventDefault();
@@ -1456,7 +1460,14 @@ function ReceiptAssistant() {
             return;
         }
 
-        setState({ status: 'loading', answer: '', error: '', count: null });
+        setState({
+            status: 'loading',
+            answer: '',
+            error: '',
+            count: null,
+            table: null,
+        });
+        setDownload({ format: null, error: '' });
 
         try {
             const response = await window.axios.post(
@@ -1470,6 +1481,7 @@ function ReceiptAssistant() {
                 answer: response.data.answer || '',
                 error: '',
                 count: response.data.recordCount ?? null,
+                table: response.data.table || null,
             });
         } catch (error) {
             setState({
@@ -1479,6 +1491,36 @@ function ReceiptAssistant() {
                     error.response?.data?.message ||
                     'The assistant could not answer that. Please try again.',
                 count: null,
+                table: null,
+            });
+        }
+    };
+
+    const downloadReport = async (format) => {
+        if (!state.table || download.format !== null) {
+            return;
+        }
+
+        setDownload({ format, error: '' });
+
+        try {
+            const response = await window.axios.post(
+                route('tools.receipts.report'),
+                {
+                    format,
+                    title: state.table.title,
+                    columns: state.table.columns,
+                    rows: state.table.rows,
+                },
+                { responseType: 'blob' },
+            );
+
+            triggerDownload(response, format);
+            setDownload({ format: null, error: '' });
+        } catch (error) {
+            setDownload({
+                format: null,
+                error: 'The file could not be generated. Please try again.',
             });
         }
     };
@@ -1543,21 +1585,133 @@ function ReceiptAssistant() {
                 </div>
             )}
 
-            {state.status === 'done' && state.answer && (
-                <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                    <p className="whitespace-pre-wrap text-sm text-zinc-800">
-                        {state.answer}
-                    </p>
-                    {state.count !== null && (
-                        <p className="mt-3 text-xs text-zinc-400">
-                            Based on {state.count} record
-                            {state.count === 1 ? '' : 's'}.
-                        </p>
+            {state.status === 'done' && (
+                <div className="mt-4 space-y-4">
+                    {state.answer && (
+                        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                            <p className="whitespace-pre-wrap text-sm text-zinc-800">
+                                {state.answer}
+                            </p>
+                            {state.count !== null && (
+                                <p className="mt-3 text-xs text-zinc-400">
+                                    Based on {state.count} record
+                                    {state.count === 1 ? '' : 's'}.
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {state.table && (
+                        <AssistantTable
+                            table={state.table}
+                            download={download}
+                            onDownload={downloadReport}
+                        />
                     )}
                 </div>
             )}
         </section>
     );
+}
+
+function AssistantTable({ table, download, onDownload }) {
+    const downloadOptions = [
+        { format: 'xlsx', label: 'Excel', icon: FileSpreadsheet },
+        { format: 'pdf', label: 'PDF', icon: FileText },
+    ];
+
+    return (
+        <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-zinc-900">
+                    {table.title}
+                </h3>
+                <div className="flex gap-2">
+                    {downloadOptions.map(({ format, label, icon: Icon }) => (
+                        <button
+                            key={format}
+                            type="button"
+                            onClick={() => onDownload(format)}
+                            disabled={download.format !== null}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:opacity-50"
+                        >
+                            {download.format === format ? (
+                                <Download className="h-3.5 w-3.5 animate-pulse" />
+                            ) : (
+                                <Icon className="h-3.5 w-3.5" />
+                            )}
+                            {download.format === format
+                                ? 'Preparing…'
+                                : label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-zinc-200">
+                <table className="min-w-full divide-y divide-zinc-200 text-sm">
+                    <thead className="bg-zinc-50 text-left text-xs font-semibold text-zinc-500">
+                        <tr>
+                            {table.columns.map((column, index) => (
+                                <th
+                                    key={`${column}-${index}`}
+                                    className="px-3 py-2"
+                                >
+                                    {column}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 bg-white">
+                        {table.rows.map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                                {row.map((cell, cellIndex) => (
+                                    <td
+                                        key={cellIndex}
+                                        className="px-3 py-2 text-zinc-700"
+                                    >
+                                        {cell}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {download.error && (
+                <p className="text-xs text-red-600">{download.error}</p>
+            )}
+        </div>
+    );
+}
+
+function triggerDownload(response, format) {
+    const blob = new Blob([response.data], {
+        type:
+            response.headers?.['content-type'] ||
+            (format === 'pdf'
+                ? 'application/pdf'
+                : 'application/octet-stream'),
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download =
+        filenameFromHeaders(response.headers) ||
+        `receipt-report.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function filenameFromHeaders(headers) {
+    const disposition = headers?.['content-disposition'] || '';
+    const match = /filename="?([^";]+)"?/.exec(disposition);
+
+    return match ? match[1] : null;
 }
 
 function SummaryCard({ label, value, icon: Icon }) {
