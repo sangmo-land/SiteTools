@@ -86,6 +86,88 @@ class SiteToolsTest extends TestCase
         ]);
     }
 
+    public function test_user_can_add_a_material_from_the_expenses_page(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('tools.materials.store'), [
+                'name' => 'Sand (sharp)',
+                'category' => 'Aggregates',
+                'unit' => 'trip',
+                'default_unit_price' => 45000,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('materials', [
+            'name' => 'Sand (sharp)',
+            'category' => 'Aggregates',
+            'unit' => 'trip',
+            'default_unit_price' => 45000,
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_user_can_update_a_material_price(): void
+    {
+        $user = User::factory()->create();
+        $material = Material::create([
+            'name' => 'Cement 42.5R 50kg',
+            'category' => 'Cement & Concrete',
+            'unit' => 'bag',
+            'default_unit_price' => 5800,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('tools.materials.update', $material->id), [
+                'name' => $material->name,
+                'category' => $material->category,
+                'unit' => 'bag',
+                'default_unit_price' => 6500,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame(6500.0, (float) $material->refresh()->default_unit_price);
+    }
+
+    public function test_material_name_must_be_unique(): void
+    {
+        $user = User::factory()->create();
+        Material::create([
+            'name' => 'Cement 42.5R 50kg',
+            'category' => 'Cement & Concrete',
+            'unit' => 'bag',
+            'default_unit_price' => 5800,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('tools.materials.store'), [
+                'name' => 'Cement 42.5R 50kg',
+                'category' => 'Cement & Concrete',
+                'unit' => 'bag',
+                'default_unit_price' => 6000,
+            ])
+            ->assertSessionHasErrors('name');
+    }
+
+    public function test_material_rejects_an_unknown_category(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('tools.materials.store'), [
+                'name' => 'Mystery item',
+                'category' => 'Spaceship parts',
+                'unit' => 'pcs',
+                'default_unit_price' => 100,
+            ])
+            ->assertSessionHasErrors('category');
+    }
+
     public function test_user_can_upload_a_receipt_without_expense_details(): void
     {
         Storage::fake('public');

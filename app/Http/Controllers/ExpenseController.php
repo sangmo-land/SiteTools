@@ -14,7 +14,7 @@ use Inertia\Response;
 
 class ExpenseController extends Controller
 {
-    private const CATEGORIES = [
+    public const CATEGORIES = [
         'Cement & Concrete',
         'Blocks & Bricks',
         'Steel & Rebar',
