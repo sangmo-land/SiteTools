@@ -109,30 +109,6 @@ class SiteToolsTest extends TestCase
         ]);
     }
 
-    public function test_user_can_update_a_material_price(): void
-    {
-        $user = User::factory()->create();
-        $material = Material::create([
-            'name' => 'Cement 42.5R 50kg',
-            'category' => 'Cement & Concrete',
-            'unit' => 'bag',
-            'default_unit_price' => 5800,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user)
-            ->patch(route('tools.materials.update', $material->id), [
-                'name' => $material->name,
-                'category' => $material->category,
-                'unit' => 'bag',
-                'default_unit_price' => 6500,
-            ])
-            ->assertSessionHasNoErrors()
-            ->assertRedirect();
-
-        $this->assertSame(6500.0, (float) $material->refresh()->default_unit_price);
-    }
-
     public function test_material_name_must_be_unique(): void
     {
         $user = User::factory()->create();

@@ -7,16 +7,21 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Lets users manage the material catalogue (the items and their unit prices)
- * straight from the Expenses page, instead of the Filament admin panel. Prices
- * entered here become the default that prefills the expense form when a material
- * is selected.
+ * Lets users add new materials (items and their unit prices) to the catalogue
+ * straight from the Expenses page. The price entered here becomes the default
+ * that prefills the expense form when the material is selected; editing or
+ * removing existing materials stays in the Filament admin.
  */
 class MaterialController extends Controller
 {
     public function store(Request $request)
     {
-        $data = $this->validated($request);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('materials', 'name')],
+            'category' => ['required', Rule::in(ExpenseController::CATEGORIES)],
+            'unit' => ['required', 'string', 'max:30'],
+            'default_unit_price' => ['required', 'numeric', 'min:0', 'max:999999999'],
+        ]);
 
         Material::create([
             ...$data,
@@ -24,30 +29,5 @@ class MaterialController extends Controller
         ]);
 
         return back()->with('status', 'Material added.');
-    }
-
-    public function update(Request $request, Material $material)
-    {
-        $material->update($this->validated($request, $material));
-
-        return back()->with('status', 'Material updated.');
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function validated(Request $request, ?Material $material = null): array
-    {
-        return $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('materials', 'name')->ignore($material?->id),
-            ],
-            'category' => ['required', Rule::in(ExpenseController::CATEGORIES)],
-            'unit' => ['required', 'string', 'max:30'],
-            'default_unit_price' => ['required', 'numeric', 'min:0', 'max:999999999'],
-        ]);
     }
 }

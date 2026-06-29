@@ -622,9 +622,8 @@ export default function Expenses({
                         <>
                             {!materials.length && (
                                 <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                                    Add your first item and price in the Materials
-                                    &amp; prices panel below before recording
-                                    expenses.
+                                    Add your first item and price in the Add an
+                                    item panel below before recording expenses.
                                 </div>
                             )}
 
@@ -1038,7 +1037,7 @@ export default function Expenses({
                 </div>
             </div>
 
-            <MaterialManager materials={materials} categories={categories} />
+            <MaterialManager categories={categories} />
 
             <ReceiptAssistant />
 
@@ -1717,7 +1716,7 @@ function filenameFromHeaders(headers) {
     return match ? match[1] : null;
 }
 
-function MaterialManager({ materials, categories }) {
+function MaterialManager({ categories }) {
     return (
         <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
@@ -1726,35 +1725,15 @@ function MaterialManager({ materials, categories }) {
                 </span>
                 <div>
                     <h2 className="text-base font-semibold text-zinc-950">
-                        Materials &amp; prices
+                        Add an item
                     </h2>
                     <p className="text-sm text-zinc-500">
-                        Add items to the list and set the unit price used across
-                        your expenses
+                        Add a new material and its unit price for your expenses
                     </p>
                 </div>
             </div>
 
             <MaterialAdder categories={categories} />
-
-            <div className="mt-5">
-                {materials.length ? (
-                    <div className="divide-y divide-zinc-100 overflow-hidden rounded-lg border border-zinc-200">
-                        {materials.map((material) => (
-                            <MaterialRow
-                                key={material.id}
-                                material={material}
-                                categories={categories}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <p className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center text-sm text-zinc-500">
-                        No items yet. Add your first material above to start
-                        recording expenses.
-                    </p>
-                )}
-            </div>
         </section>
     );
 }
@@ -1846,103 +1825,6 @@ function MaterialAdder({ categories }) {
                 >
                     <Plus className="h-4 w-4" />
                     Add item
-                </button>
-            </div>
-        </form>
-    );
-}
-
-function MaterialRow({ material, categories }) {
-    const form = useForm({
-        name: material.name,
-        category: material.category,
-        unit: material.unit,
-        default_unit_price: material.defaultUnitPrice,
-    });
-
-    const dirty =
-        form.data.category !== material.category ||
-        form.data.unit !== material.unit ||
-        Number(form.data.default_unit_price) !==
-            Number(material.defaultUnitPrice);
-
-    const save = (event) => {
-        event.preventDefault();
-
-        form.patch(route('tools.materials.update', material.id), {
-            preserveScroll: true,
-        });
-    };
-
-    return (
-        <form
-            onSubmit={save}
-            className="grid items-end gap-3 bg-white p-4 sm:grid-cols-2 lg:grid-cols-12"
-        >
-            <div className="lg:col-span-3">
-                <p className="text-sm font-semibold text-zinc-900">
-                    {material.name}
-                </p>
-                <p className="mt-0.5 text-xs text-zinc-500">
-                    Saved {formatMoney(material.defaultUnitPrice)} /{' '}
-                    {material.unit}
-                </p>
-            </div>
-            <div className="lg:col-span-3">
-                <FormField label="Category" error={form.errors.category}>
-                    <select
-                        value={form.data.category}
-                        onChange={(event) =>
-                            form.setData('category', event.target.value)
-                        }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    >
-                        {categories.map((category) => (
-                            <option key={category} value={category}>
-                                {category}
-                            </option>
-                        ))}
-                    </select>
-                </FormField>
-            </div>
-            <div className="lg:col-span-2">
-                <FormField label="Unit" error={form.errors.unit}>
-                    <input
-                        value={form.data.unit}
-                        onChange={(event) =>
-                            form.setData('unit', event.target.value)
-                        }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                    />
-                </FormField>
-            </div>
-            <div className="lg:col-span-2">
-                <FormField
-                    label="Price (FCFA)"
-                    error={form.errors.default_unit_price}
-                >
-                    <input
-                        value={form.data.default_unit_price}
-                        onChange={(event) =>
-                            form.setData(
-                                'default_unit_price',
-                                event.target.value,
-                            )
-                        }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                        min="0"
-                        step="1"
-                        type="number"
-                    />
-                </FormField>
-            </div>
-            <div className="lg:col-span-2">
-                <button
-                    type="submit"
-                    disabled={!dirty || form.processing}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-emerald-600 bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:border-zinc-200 disabled:bg-white disabled:text-zinc-400"
-                >
-                    {form.processing ? 'Saving…' : 'Save'}
                 </button>
             </div>
         </form>

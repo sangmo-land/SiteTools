@@ -41,7 +41,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/tools/expenses/{expense}', [ExpenseController::class, 'update'])->name('tools.expenses.update');
     Route::delete('/tools/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('tools.expenses.destroy');
     Route::post('/tools/materials', [MaterialController::class, 'store'])->name('tools.materials.store');
-    Route::patch('/tools/materials/{material}', [MaterialController::class, 'update'])->name('tools.materials.update');
     Route::post('/tools/projects', [SiteProjectController::class, 'store'])->name('tools.projects.store');
     Route::get('/tools/calculators', fn () => Inertia::render('Tools/Calculators'))->name('tools.calculators');
 });
