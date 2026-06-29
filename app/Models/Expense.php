@@ -35,6 +35,7 @@ class Expense extends Model
         'receipt_text',
         'receipt_confidence',
         'notes',
+        'line_items',
     ];
 
     protected function casts(): array
@@ -48,6 +49,7 @@ class Expense extends Model
             'receipt_tax_amount' => 'decimal:2',
             'receipt_items' => 'array',
             'receipt_confidence' => 'decimal:2',
+            'line_items' => 'array',
         ];
     }
 

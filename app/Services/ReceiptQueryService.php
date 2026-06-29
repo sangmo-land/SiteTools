@@ -111,7 +111,7 @@ class ReceiptQueryService
      */
     private function lineItems(Expense $expense): array
     {
-        $items = $expense->receipt_items ?? [];
+        $items = $expense->line_items ?: ($expense->receipt_items ?? []);
 
         if (! is_array($items)) {
             return [];

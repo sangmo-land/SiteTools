@@ -65,14 +65,18 @@ class SiteToolsTest extends TestCase
         $this->actingAs($user)
             ->post(route('tools.expenses.store'), [
                 'site_project_id' => $project->id,
-                'material_id' => $material->id,
                 'vendor' => 'Depot 12',
                 'purchase_date' => now()->toDateString(),
-                'quantity' => 10.5,
-                'unit' => 'bag',
-                'unit_cost' => 5800,
                 'payment_method' => 'POS',
                 'status' => 'paid',
+                'items' => [[
+                    'material_id' => $material->id,
+                    'description' => $material->name,
+                    'category' => $material->category,
+                    'unit' => 'bag',
+                    'quantity' => 10.5,
+                    'unit_price' => 5800,
+                ]],
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect();
@@ -86,33 +90,10 @@ class SiteToolsTest extends TestCase
         ]);
     }
 
-    public function test_user_can_add_a_material_from_the_expenses_page(): void
+    public function test_user_can_record_a_purchase_with_multiple_items(): void
     {
         $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->post(route('tools.materials.store'), [
-                'name' => 'Sand (sharp)',
-                'category' => 'Aggregates',
-                'unit' => 'trip',
-                'default_unit_price' => 45000,
-            ])
-            ->assertSessionHasNoErrors()
-            ->assertRedirect();
-
-        $this->assertDatabaseHas('materials', [
-            'name' => 'Sand (sharp)',
-            'category' => 'Aggregates',
-            'unit' => 'trip',
-            'default_unit_price' => 45000,
-            'is_active' => true,
-        ]);
-    }
-
-    public function test_material_name_must_be_unique(): void
-    {
-        $user = User::factory()->create();
-        Material::create([
+        $cement = Material::create([
             'name' => 'Cement 42.5R 50kg',
             'category' => 'Cement & Concrete',
             'unit' => 'bag',
@@ -121,27 +102,63 @@ class SiteToolsTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('tools.materials.store'), [
-                'name' => 'Cement 42.5R 50kg',
-                'category' => 'Cement & Concrete',
-                'unit' => 'bag',
-                'default_unit_price' => 6000,
+            ->post(route('tools.expenses.store'), [
+                'vendor' => 'Depot 12',
+                'purchase_date' => now()->toDateString(),
+                'payment_method' => 'Cash',
+                'status' => 'paid',
+                'items' => [
+                    [
+                        'material_id' => $cement->id,
+                        'description' => $cement->name,
+                        'category' => $cement->category,
+                        'unit' => 'bag',
+                        'quantity' => 10,
+                        'unit_price' => 5800,
+                    ],
+                    [
+                        // Brand-new item — should be added to the catalogue.
+                        'description' => 'Binding wire',
+                        'category' => 'Steel & Rebar',
+                        'unit' => 'roll',
+                        'quantity' => 4,
+                        'unit_price' => 3500,
+                    ],
+                ],
             ])
-            ->assertSessionHasErrors('name');
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $expense = Expense::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertNull($expense->material_id);
+        $this->assertSame('Cement 42.5R 50kg +1 more', $expense->title);
+        $this->assertSame(72000.0, (float) $expense->total_amount); // 58 000 + 14 000
+        $this->assertCount(2, $expense->line_items);
+        $this->assertSame('Binding wire', $expense->line_items[1]['description']);
+
+        // The brand-new item is now reusable from the catalogue.
+        $this->assertDatabaseHas('materials', [
+            'name' => 'Binding wire',
+            'category' => 'Steel & Rebar',
+            'unit' => 'roll',
+            'default_unit_price' => 3500,
+            'is_active' => true,
+        ]);
     }
 
-    public function test_material_rejects_an_unknown_category(): void
+    public function test_purchase_requires_at_least_one_item(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('tools.materials.store'), [
-                'name' => 'Mystery item',
-                'category' => 'Spaceship parts',
-                'unit' => 'pcs',
-                'default_unit_price' => 100,
+            ->post(route('tools.expenses.store'), [
+                'purchase_date' => now()->toDateString(),
+                'payment_method' => 'Cash',
+                'status' => 'paid',
+                'items' => [],
             ])
-            ->assertSessionHasErrors('category');
+            ->assertSessionHasErrors('items');
     }
 
     public function test_user_can_upload_a_receipt_without_expense_details(): void

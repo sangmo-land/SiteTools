@@ -94,11 +94,11 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $data = $request->validate($this->rules($user));
+        $data = $request->validate($this->purchaseRules($user));
 
-        Expense::create($this->expenseAttributes($data, $request, $user));
+        Expense::create($this->purchaseAttributes($data, $request, $user));
 
-        return back()->with('status', 'Expense recorded.');
+        return back()->with('status', 'Purchase recorded.');
     }
 
     public function storeReceipt(Request $request)
@@ -156,11 +156,11 @@ class ExpenseController extends Controller
         $user = $request->user();
         abort_unless($expense->user_id === $user->id, 404);
 
-        $data = $request->validate($this->rules($user));
+        $data = $request->validate($this->purchaseRules($user));
 
-        $expense->update($this->expenseAttributes($data, $request, $user, $expense));
+        $expense->update($this->purchaseAttributes($data, $request, $user, $expense));
 
-        return back()->with('status', 'Expense updated.');
+        return back()->with('status', 'Purchase updated.');
     }
 
     public function destroy(Request $request, Expense $expense)
@@ -200,28 +200,31 @@ class ExpenseController extends Controller
             ->when($request->filled('to'), fn (Builder $query) => $query->whereDate('purchase_date', '<=', $request->date('to')));
     }
 
-    private function rules(User $user): array
+    private function purchaseRules(User $user): array
     {
         return [
             'site_project_id' => [
                 'nullable',
                 Rule::exists('site_projects', 'id')->where(fn ($query) => $query->where('user_id', $user->id)),
             ],
-            'material_id' => [
-                'required',
-                Rule::exists('materials', 'id')->where(fn ($query) => $query->where('is_active', true)),
-            ],
             'vendor' => ['nullable', 'string', 'max:160'],
             'purchase_date' => ['required', 'date'],
-            'quantity' => ['nullable', 'numeric', 'min:0', 'max:999999999', 'regex:/^\d+(\.\d)?$/'],
-            'unit' => ['nullable', 'string', 'max:30'],
-            'unit_cost' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
-            'total_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
             'status' => ['required', Rule::in(self::STATUSES)],
             'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,tif,tiff', 'max:10240'],
-            ...$this->receiptOcrRules(),
             'notes' => ['nullable', 'string', 'max:5000'],
+            'items' => ['required', 'array', 'min:1', 'max:100'],
+            'items.*.material_id' => [
+                'nullable',
+                Rule::exists('materials', 'id')->where(fn ($query) => $query->where('is_active', true)),
+            ],
+            'items.*.description' => ['required', 'string', 'max:255'],
+            'items.*.category' => ['required', Rule::in(self::CATEGORIES)],
+            'items.*.unit' => ['nullable', 'string', 'max:30'],
+            'items.*.quantity' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'items.*.total' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            ...$this->receiptOcrRules(),
         ];
     }
 
@@ -248,32 +251,32 @@ class ExpenseController extends Controller
         ];
     }
 
-    private function expenseAttributes(array $data, Request $request, User $user, ?Expense $expense = null): array
+    private function purchaseAttributes(array $data, Request $request, User $user, ?Expense $expense = null): array
     {
-        $material = Material::query()->findOrFail($data['material_id']);
-        $quantity = $this->nullableFloat($data['quantity'] ?? null);
-        $unitCost = $this->nullableFloat($data['unit_cost'] ?? null) ?? (float) $material->default_unit_price;
-        $total = $this->nullableFloat($data['total_amount'] ?? null);
+        $lineItems = array_map($this->normalizeItem(...), $data['items']);
+        $total = array_sum(array_column($lineItems, 'total'));
 
-        if ($total === null && $quantity !== null && $unitCost !== null) {
-            $total = round($quantity * $unitCost, 2);
-        }
+        $first = $lineItems[0];
+        $single = count($lineItems) === 1;
+        $extra = count($lineItems) - 1;
 
         $attributes = [
             'user_id' => $user->id,
             'entry_type' => 'expense',
             'site_project_id' => $data['site_project_id'] ?? null,
-            'material_id' => $material->id,
-            'title' => $material->name,
+            'material_id' => $single ? $first['material_id'] : null,
+            'title' => $single ? $first['description'] : "{$first['description']} +{$extra} more",
             'vendor' => $data['vendor'] ?? null,
-            'category' => $material->category,
+            'category' => $first['category'],
             'purchase_date' => $data['purchase_date'],
-            'quantity' => $quantity,
-            'unit' => $data['unit'] ?? $material->unit,
-            'unit_cost' => $unitCost,
-            'total_amount' => $total ?? 0,
+            'quantity' => $single ? $first['quantity'] : null,
+            'unit' => $single ? $first['unit'] : null,
+            'unit_cost' => $single ? $first['unit_price'] : null,
+            'total_amount' => round($total, 2),
             'payment_method' => $data['payment_method'],
             'status' => $data['status'],
+            'line_items' => $lineItems,
+            'notes' => $data['notes'] ?? null,
             'receipt_text' => $data['receipt_text'] ?? null,
             'receipt_confidence' => $this->nullableFloat($data['receipt_confidence'] ?? null),
             'receipt_number' => $data['receipt_number'] ?? null,
@@ -281,7 +284,6 @@ class ExpenseController extends Controller
             'receipt_subtotal' => $this->nullableFloat($data['receipt_subtotal'] ?? null),
             'receipt_tax_amount' => $this->nullableFloat($data['receipt_tax_amount'] ?? null),
             'receipt_items' => $data['receipt_items'] ?? [],
-            'notes' => $data['notes'] ?? null,
         ];
 
         if ($request->hasFile('receipt')) {
@@ -295,6 +297,69 @@ class ExpenseController extends Controller
         }
 
         return $attributes;
+    }
+
+    /**
+     * Normalise one submitted line item, resolving its catalogue material
+     * (existing or brand new) and computing the line total.
+     *
+     * @param  array<string, mixed>  $raw
+     * @return array<string, mixed>
+     */
+    private function normalizeItem(array $raw): array
+    {
+        $material = $this->resolveMaterial($raw);
+        $quantity = $this->nullableFloat($raw['quantity'] ?? null);
+        $unitPrice = $this->nullableFloat($raw['unit_price'] ?? null)
+            ?? ($material ? (float) $material->default_unit_price : null);
+        $total = $this->nullableFloat($raw['total'] ?? null);
+
+        if ($total === null) {
+            $total = $quantity !== null && $unitPrice !== null
+                ? round($quantity * $unitPrice, 2)
+                : ($unitPrice ?? 0.0);
+        }
+
+        return [
+            'material_id' => $material?->id,
+            'material_name' => $material?->name,
+            'description' => trim((string) $raw['description']),
+            'category' => $raw['category'],
+            'quantity' => $quantity,
+            'unit' => $raw['unit'] ?? $material?->unit,
+            'unit_price' => $unitPrice,
+            'total' => (float) $total,
+        ];
+    }
+
+    /**
+     * Find the catalogue material an item refers to. A brand-new item (no
+     * material_id) is added to the catalogue by name so it can be reused on
+     * later purchases.
+     *
+     * @param  array<string, mixed>  $raw
+     */
+    private function resolveMaterial(array $raw): ?Material
+    {
+        if (! empty($raw['material_id'])) {
+            return Material::find($raw['material_id']);
+        }
+
+        $name = trim((string) ($raw['description'] ?? ''));
+
+        if ($name === '') {
+            return null;
+        }
+
+        return Material::firstOrCreate(
+            ['name' => $name],
+            [
+                'category' => $raw['category'] ?? 'Other',
+                'unit' => $raw['unit'] ?? 'unit',
+                'default_unit_price' => $this->nullableFloat($raw['unit_price'] ?? null) ?? 0,
+                'is_active' => true,
+            ],
+        );
     }
 
     private function serializeExpense(Expense $expense): array
@@ -328,6 +393,15 @@ class ExpenseController extends Controller
             'receiptSubtotal' => $expense->receipt_subtotal !== null ? (float) $expense->receipt_subtotal : null,
             'receiptTaxAmount' => $expense->receipt_tax_amount !== null ? (float) $expense->receipt_tax_amount : null,
             'receiptItems' => $expense->receipt_items ?? [],
+            'lineItems' => array_map(static fn (array $item): array => [
+                'description' => $item['description'] ?? null,
+                'materialName' => $item['material_name'] ?? null,
+                'category' => $item['category'] ?? null,
+                'quantity' => isset($item['quantity']) ? (float) $item['quantity'] : null,
+                'unit' => $item['unit'] ?? null,
+                'unitPrice' => isset($item['unit_price']) ? (float) $item['unit_price'] : null,
+                'total' => isset($item['total']) ? (float) $item['total'] : null,
+            ], array_filter($expense->line_items ?? [], 'is_array')),
             'notes' => $expense->notes,
             'project' => $expense->siteProject ? [
                 'id' => $expense->siteProject->id,
