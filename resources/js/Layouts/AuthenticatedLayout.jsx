@@ -82,7 +82,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </button>
 
                         <Link
-                            href={route('dashboard')}
+                            href="/"
                             className="flex items-center gap-2.5 lg:hidden"
                         >
                             <BrandMark />
@@ -170,7 +170,7 @@ function Sidebar({ user, className = '', onNavigate, onClose }) {
         >
             <div className="flex h-16 items-center justify-between px-5">
                 <Link
-                    href={route('dashboard')}
+                    href="/"
                     onClick={onNavigate}
                     className="flex items-center gap-2.5"
                 >
