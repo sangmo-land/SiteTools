@@ -30,7 +30,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <UpdatePasswordForm className="max-w-xl" />
                 </div>
 
-                <div className="card border-rose-200/70 p-6 sm:p-8">
+                <div className="card border-rose-500/30 p-6 sm:p-8">
                     <DeleteUserForm className="max-w-xl" />
                 </div>
             </div>

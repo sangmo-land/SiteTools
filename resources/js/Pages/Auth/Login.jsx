@@ -26,14 +26,14 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
 
             <div className="mb-6">
-                <h1 className="text-xl font-bold text-ink">Welcome back</h1>
-                <p className="mt-1 text-sm text-slate-500">
+                <h1 className="text-xl font-bold text-white">Welcome back</h1>
+                <p className="mt-1 text-sm text-slate-400">
                     Log in to your SiteTools workspace.
                 </p>
             </div>
 
             {status && (
-                <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700">
+                <div className="mb-4 rounded-lg border border-brand-500/30 bg-brand-500/15 px-3 py-2 text-sm font-medium text-brand-300">
                     {status}
                 </div>
             )}
@@ -81,7 +81,7 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-zinc-600">
+                        <span className="ms-2 text-sm text-slate-400">
                             Remember me
                         </span>
                     </label>
@@ -91,7 +91,7 @@ export default function Login({ status, canResetPassword }) {
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-zinc-600 underline hover:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                            className="rounded-md text-sm text-slate-400 underline hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                         >
                             Forgot your password?
                         </Link>

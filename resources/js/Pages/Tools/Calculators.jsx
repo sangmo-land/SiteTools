@@ -291,14 +291,14 @@ export default function Calculators() {
 
                 <section className="card p-5 sm:p-6">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
                             <Ruler className="h-5 w-5" />
                         </span>
                         <div>
-                            <h2 className="text-base font-bold text-ink">
+                            <h2 className="text-base font-bold text-white">
                                 Unit converter
                             </h2>
-                            <p className="text-sm text-slate-500">
+                            <p className="text-sm text-slate-400">
                                 Common field conversions
                             </p>
                         </div>
@@ -360,9 +360,9 @@ export default function Calculators() {
 
 function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
     const colorMap = {
-        brand: 'bg-brand-50 text-brand-600',
-        amber: 'bg-amber-50 text-amber-600',
-        sky: 'bg-sky-50 text-sky-600',
+        brand: 'bg-brand-500/15 text-brand-300',
+        amber: 'bg-amber-500/15 text-amber-300',
+        sky: 'bg-sky-500/15 text-sky-300',
     };
 
     return (
@@ -374,8 +374,8 @@ function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
                     <Icon className="h-5 w-5" />
                 </span>
                 <div>
-                    <h2 className="text-base font-bold text-ink">{title}</h2>
-                    <p className="text-sm text-slate-500">{subtitle}</p>
+                    <h2 className="text-base font-bold text-white">{title}</h2>
+                    <p className="text-sm text-slate-400">{subtitle}</p>
                 </div>
             </div>
 
@@ -385,12 +385,12 @@ function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
                 {result.map(([label, value]) => (
                     <div
                         key={label}
-                        className="rounded-xl border hairline bg-slate-50/70 p-4 transition hover:border-brand-300 hover:bg-brand-50/50"
+                        className="rounded-xl border hairline bg-white/[0.04] p-4 transition hover:border-brand-400/40 hover:bg-brand-500/10"
                     >
-                        <p className="text-xs font-medium text-slate-500">
+                        <p className="text-xs font-medium text-slate-400">
                             {label}
                         </p>
-                        <p className="mt-1 text-2xl font-bold text-ink">
+                        <p className="mt-1 text-2xl font-bold text-white">
                             {value}
                         </p>
                     </div>

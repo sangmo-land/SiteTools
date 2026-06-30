@@ -31,10 +31,10 @@ const statusLabels = {
 };
 
 const statusStyles = {
-    active: 'bg-brand-50 text-brand-700 ring-brand-600/20',
-    planning: 'bg-sky-50 text-sky-700 ring-sky-600/20',
-    on_hold: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-    completed: 'bg-slate-100 text-slate-600 ring-slate-500/20',
+    active: 'bg-brand-500/15 text-brand-300 ring-brand-600/20',
+    planning: 'bg-sky-500/15 text-sky-300 ring-sky-600/20',
+    on_hold: 'bg-amber-500/15 text-amber-300 ring-amber-600/20',
+    completed: 'bg-white/10 text-slate-300 ring-slate-500/20',
 };
 
 const barColors = [
@@ -136,14 +136,14 @@ export default function Dashboard({
                 <section className="card fade-up p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h2 className="text-base font-bold text-ink">
+                            <h2 className="text-base font-bold text-white">
                                 Spend trend
                             </h2>
-                            <p className="mt-0.5 text-sm text-slate-500">
+                            <p className="mt-0.5 text-sm text-slate-400">
                                 Last six months
                             </p>
                         </div>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500/15 text-brand-300">
                             <TrendingUp className="h-[18px] w-[18px]" />
                         </span>
                     </div>
@@ -154,7 +154,7 @@ export default function Dashboard({
                                 className="flex flex-col items-center gap-2"
                             >
                                 <div className="flex h-44 w-full items-end">
-                                    <div className="meter-track flex w-full items-end !rounded-lg bg-slate-100">
+                                    <div className="meter-track flex w-full items-end !rounded-lg bg-white/10">
                                         <div
                                             className={`w-full rounded-lg bg-gradient-to-t ${barColors[index % barColors.length]} transition-all`}
                                             style={{
@@ -166,7 +166,7 @@ export default function Dashboard({
                                     </div>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-xs font-semibold text-slate-700">
+                                    <p className="text-xs font-semibold text-slate-200">
                                         {month.label.split(' ')[0]}
                                     </p>
                                     <p className="text-[10px] text-slate-400">
@@ -181,14 +181,14 @@ export default function Dashboard({
                 <section className="card fade-up anim-delay-1 p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h2 className="text-base font-bold text-ink">
+                            <h2 className="text-base font-bold text-white">
                                 Category mix
                             </h2>
-                            <p className="mt-0.5 text-sm text-slate-500">
+                            <p className="mt-0.5 text-sm text-slate-400">
                                 Top material groups
                             </p>
                         </div>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300">
                             <Package className="h-[18px] w-[18px]" />
                         </span>
                     </div>
@@ -197,7 +197,7 @@ export default function Dashboard({
                             categoryTotals.map((category, index) => (
                                 <div key={category.category}>
                                     <div className="flex items-center justify-between gap-3 text-sm">
-                                        <span className="flex items-center gap-2 truncate font-medium text-slate-700">
+                                        <span className="flex items-center gap-2 truncate font-medium text-slate-200">
                                             <span
                                                 className={`h-2 w-2 shrink-0 rounded-full ${dotColors[index % dotColors.length]}`}
                                             />
@@ -205,7 +205,7 @@ export default function Dashboard({
                                                 {category.category}
                                             </span>
                                         </span>
-                                        <span className="shrink-0 text-xs font-semibold text-slate-500">
+                                        <span className="shrink-0 text-xs font-semibold text-slate-400">
                                             {category.total
                                                 ? Math.round(
                                                       (category.total /
@@ -239,14 +239,14 @@ export default function Dashboard({
                 <section className="card fade-up p-5 sm:p-6">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-base font-bold text-ink">
+                            <h2 className="text-base font-bold text-white">
                                 Project budgets
                             </h2>
-                            <p className="mt-0.5 text-sm text-slate-500">
+                            <p className="mt-0.5 text-sm text-slate-400">
                                 Active site cost position
                             </p>
                         </div>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-300">
                             <FolderKanban className="h-[18px] w-[18px]" />
                         </span>
                     </div>
@@ -265,14 +265,14 @@ export default function Dashboard({
                                 return (
                                     <div
                                         key={project.id}
-                                        className="rounded-xl border hairline bg-white p-4 transition hover:border-brand-300 hover:shadow-sm"
+                                        className="rounded-xl border hairline bg-white/5 p-4 transition hover:border-brand-400/40 hover:shadow-sm"
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <h3 className="truncate font-semibold text-ink">
+                                                <h3 className="truncate font-semibold text-white">
                                                     {project.name}
                                                 </h3>
-                                                <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                <p className="mt-0.5 truncate text-xs text-slate-400">
                                                     {project.location ||
                                                         'No location'}{' '}
                                                     · {project.expenseCount}{' '}
@@ -280,14 +280,14 @@ export default function Dashboard({
                                                 </p>
                                             </div>
                                             <span
-                                                className={`badge shrink-0 ring-1 ring-inset ${statusStyles[project.status] || 'bg-slate-100 text-slate-600 ring-slate-500/20'}`}
+                                                className={`badge shrink-0 ring-1 ring-inset ${statusStyles[project.status] || 'bg-white/10 text-slate-300 ring-slate-500/20'}`}
                                             >
                                                 {statusLabels[project.status] ||
                                                     project.status}
                                             </span>
                                         </div>
                                         <div className="mt-3 flex items-center justify-between text-sm">
-                                            <span className="font-semibold text-ink">
+                                            <span className="font-semibold text-white">
                                                 {formatMoney(project.spent)}
                                             </span>
                                             <span className="text-xs text-slate-400">
@@ -316,16 +316,16 @@ export default function Dashboard({
                 <section className="card fade-up anim-delay-1 overflow-hidden">
                     <div className="flex items-center justify-between gap-3 border-b hairline p-5 sm:px-6">
                         <div>
-                            <h2 className="text-base font-bold text-ink">
+                            <h2 className="text-base font-bold text-white">
                                 Recent purchases
                             </h2>
-                            <p className="mt-0.5 text-sm text-slate-500">
+                            <p className="mt-0.5 text-sm text-slate-400">
                                 Latest site material entries
                             </p>
                         </div>
                         <Link
                             href={route('tools.expenses')}
-                            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand-300 transition hover:bg-brand-500/10"
                         >
                             View all
                             <ArrowRight className="h-4 w-4" />
@@ -336,16 +336,16 @@ export default function Dashboard({
                             recentExpenses.map((expense) => (
                                 <div
                                     key={expense.id}
-                                    className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-slate-50/70 sm:px-6"
+                                    className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-white/[0.04] sm:px-6"
                                 >
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-slate-400">
                                         <ReceiptText className="h-4 w-4" />
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-ink">
+                                        <p className="truncate text-sm font-semibold text-white">
                                             {expense.title}
                                         </p>
-                                        <p className="truncate text-xs text-slate-500">
+                                        <p className="truncate text-xs text-slate-400">
                                             {expense.vendor || 'No vendor'}
                                             {expense.project
                                                 ? ` · ${expense.project.name}`
@@ -353,7 +353,7 @@ export default function Dashboard({
                                         </p>
                                     </div>
                                     <div className="shrink-0 text-right">
-                                        <p className="text-sm font-semibold text-ink">
+                                        <p className="text-sm font-semibold text-white">
                                             {formatMoney(expense.totalAmount)}
                                         </p>
                                         <p className="text-xs text-slate-400">
@@ -401,10 +401,10 @@ export default function Dashboard({
 
 function StatCard({ label, value, sub, icon: Icon, accent, delay = '' }) {
     const accents = {
-        brand: 'bg-brand-50 text-brand-600',
-        sky: 'bg-sky-50 text-sky-600',
-        amber: 'bg-amber-50 text-amber-600',
-        violet: 'bg-violet-50 text-violet-600',
+        brand: 'bg-brand-500/15 text-brand-300',
+        sky: 'bg-sky-500/15 text-sky-300',
+        amber: 'bg-amber-500/15 text-amber-300',
+        violet: 'bg-violet-500/15 text-violet-300',
     };
 
     return (
@@ -412,7 +412,7 @@ function StatCard({ label, value, sub, icon: Icon, accent, delay = '' }) {
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="eyebrow">{label}</p>
-                    <p className="mt-2 truncate text-2xl font-bold text-ink">
+                    <p className="mt-2 truncate text-2xl font-bold text-white">
                         {value}
                     </p>
                     {sub && <p className="mt-1 text-xs text-slate-400">{sub}</p>}
@@ -429,9 +429,9 @@ function StatCard({ label, value, sub, icon: Icon, accent, delay = '' }) {
 
 function QuickAction({ href, title, text, icon: Icon, accent }) {
     const accents = {
-        brand: 'bg-brand-50 text-brand-600',
-        sky: 'bg-sky-50 text-sky-600',
-        amber: 'bg-amber-50 text-amber-600',
+        brand: 'bg-brand-500/15 text-brand-300',
+        sky: 'bg-sky-500/15 text-sky-300',
+        amber: 'bg-amber-500/15 text-amber-300',
     };
 
     return (
@@ -445,8 +445,8 @@ function QuickAction({ href, title, text, icon: Icon, accent }) {
                 <Icon className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-                <p className="font-semibold text-ink">{title}</p>
-                <p className="truncate text-xs text-slate-500">{text}</p>
+                <p className="font-semibold text-white">{title}</p>
+                <p className="truncate text-xs text-slate-400">{text}</p>
             </div>
             <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-brand-500" />
         </Link>
@@ -455,7 +455,7 @@ function QuickAction({ href, title, text, icon: Icon, accent }) {
 
 function EmptyState({ text }) {
     return (
-        <div className="rounded-xl border border-dashed hairline p-6 text-center text-sm text-slate-500">
+        <div className="rounded-xl border border-dashed hairline p-6 text-center text-sm text-slate-400">
             {text}
         </div>
     );

@@ -566,14 +566,14 @@ export default function Expenses({
                         subtitle="Upload only the receipt, or record all purchase details."
                     />
 
-                    <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+                    <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-white/10 p-1">
                         <button
                             type="button"
                             onClick={() => setUploadMode('receipt')}
                             className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                                 uploadMode === 'receipt'
-                                    ? 'bg-white text-ink shadow-sm'
-                                    : 'text-slate-500 hover:text-ink'
+                                    ? 'bg-white/5 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-white'
                             }`}
                         >
                             Receipt only
@@ -583,8 +583,8 @@ export default function Expenses({
                             onClick={() => setUploadMode('expense')}
                             className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                                 uploadMode === 'expense'
-                                    ? 'bg-white text-ink shadow-sm'
-                                    : 'text-slate-500 hover:text-ink'
+                                    ? 'bg-white/5 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-white'
                             }`}
                         >
                             Full expense
@@ -596,7 +596,7 @@ export default function Expenses({
                             onSubmit={submitReceiptOnly}
                             className="mt-5 space-y-5"
                         >
-                            <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-900">
+                            <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-200">
                                 Choose a receipt. OCR will read its supplier,
                                 date, totals, and line items for the Excel
                                 export—no manual purchase details are required.
@@ -606,15 +606,15 @@ export default function Expenses({
                                 label="Receipt"
                                 error={receiptOnlyForm.errors.receipt}
                             >
-                                <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed hairline bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 transition hover:border-brand-400 hover:bg-brand-50/50">
-                                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-brand-600 shadow-sm">
+                                <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed hairline bg-white/5 px-4 py-6 text-center text-sm text-slate-300 transition hover:border-brand-400/50 hover:bg-brand-500/10">
+                                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/5 text-brand-600 shadow-sm">
                                         <Upload className="h-5 w-5" />
                                     </span>
-                                    <span className="font-semibold text-ink">
+                                    <span className="font-semibold text-white">
                                         {receiptOnlyForm.data.receipt?.name ||
                                             'Choose JPG or PNG receipt'}
                                     </span>
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-slate-400">
                                         JPG or PNG up to 5 MB
                                     </span>
                                     <input
@@ -752,15 +752,15 @@ export default function Expenses({
                             <div className="space-y-3">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-ink">
+                                        <h3 className="text-sm font-semibold text-white">
                                             Items in this purchase
                                         </h3>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-xs text-slate-400">
                                             Pick an item from your catalogue or
                                             add a brand-new one.
                                         </p>
                                     </div>
-                                    <span className="badge bg-brand-50 text-brand-700">
+                                    <span className="badge bg-brand-500/15 text-brand-300">
                                         Total {formatMoney(grandTotal)}
                                     </span>
                                 </div>
@@ -789,7 +789,7 @@ export default function Expenses({
                                 <button
                                     type="button"
                                     onClick={addItem}
-                                    className="inline-flex items-center gap-2 rounded-lg border border-dashed hairline px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-dashed hairline px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-brand-400/50 hover:bg-brand-500/10 hover:text-brand-200"
                                 >
                                     <Plus className="h-4 w-4" />
                                     Add item
@@ -800,7 +800,7 @@ export default function Expenses({
                                 label="Receipt (optional)"
                                 error={expenseForm.errors.receipt}
                             >
-                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed hairline px-3 py-2.5 text-sm text-slate-600 transition hover:border-brand-400 hover:bg-brand-50">
+                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed hairline px-3 py-2.5 text-sm text-slate-300 transition hover:border-brand-400/50 hover:bg-brand-500/10">
                                     <span className="flex items-center gap-2 truncate">
                                         <Upload className="h-4 w-4 shrink-0 text-slate-400" />
                                         <span className="truncate">
@@ -836,10 +836,10 @@ export default function Expenses({
                             </FormField>
 
                             <div className="flex flex-wrap items-center justify-between gap-3 border-t hairline pt-4">
-                                <p className="text-sm text-slate-500">
+                                <p className="text-sm text-slate-400">
                                     {items.length} item
                                     {items.length === 1 ? '' : 's'} ·{' '}
-                                    <span className="font-semibold text-ink">
+                                    <span className="font-semibold text-white">
                                         {formatMoney(grandTotal)}
                                     </span>
                                 </p>
@@ -970,21 +970,21 @@ export default function Expenses({
             <section className="card mt-5 overflow-hidden">
                 <div className="flex flex-col gap-2 border-b hairline p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
-                        <h2 className="text-base font-bold text-ink">
+                        <h2 className="text-base font-bold text-white">
                             Purchase log
                         </h2>
-                        <p className="mt-0.5 text-sm text-slate-500">
+                        <p className="mt-0.5 text-sm text-slate-400">
                             Receipts, payment state, and project allocation
                         </p>
                     </div>
-                    <span className="badge bg-slate-100 text-slate-600">
+                    <span className="badge bg-white/10 text-slate-300">
                         {expenses.total} records
                     </span>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y hairline">
-                        <thead className="bg-slate-50/80">
+                        <thead className="bg-white/[0.04]">
                             <tr>
                                 <TableHead>Entry</TableHead>
                                 <TableHead>Project</TableHead>
@@ -996,24 +996,24 @@ export default function Expenses({
                                 <TableHead />
                             </tr>
                         </thead>
-                        <tbody className="divide-y hairline bg-white">
+                        <tbody className="divide-y hairline bg-white/5">
                             {expenses.data.length ? (
                                 expenses.data.map((expense) => (
                                     <tr
                                         key={expense.id}
-                                        className="transition hover:bg-slate-50/70"
+                                        className="transition hover:bg-white/[0.04]"
                                     >
                                         <TableCell>
-                                            <p className="font-semibold text-ink">
+                                            <p className="font-semibold text-white">
                                                 {expense.title}
                                             </p>
-                                            <p className="mt-0.5 text-sm text-slate-500">
+                                            <p className="mt-0.5 text-sm text-slate-400">
                                                 {expense.entryType === 'receipt'
                                                     ? expense.receiptOriginalName
                                                     : `${expense.vendor || 'No vendor'} · ${expense.category}`}
                                             </p>
                                             {expense.lineItems?.length > 1 && (
-                                                <ul className="mt-1.5 max-w-xs space-y-0.5 text-xs text-slate-500">
+                                                <ul className="mt-1.5 max-w-xs space-y-0.5 text-xs text-slate-400">
                                                     {expense.lineItems.map(
                                                         (line, lineIndex) => (
                                                             <li
@@ -1043,7 +1043,7 @@ export default function Expenses({
                                         </TableCell>
                                         <TableCell>
                                             {expense.project?.name ? (
-                                                <span className="badge bg-slate-100 text-slate-700">
+                                                <span className="badge bg-white/10 text-slate-300">
                                                     {expense.project.name}
                                                 </span>
                                             ) : (
@@ -1053,7 +1053,7 @@ export default function Expenses({
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="inline-flex items-center gap-2 text-slate-600">
+                                            <span className="inline-flex items-center gap-2 text-slate-300">
                                                 <CalendarDays className="h-4 w-4 text-slate-400" />
                                                 {expense.purchaseDate}
                                             </span>
@@ -1079,7 +1079,7 @@ export default function Expenses({
                                                 )
                                             ) : (
                                                 <div className="space-y-1">
-                                                    <span className="text-slate-600">
+                                                    <span className="text-slate-300">
                                                         {expense.paymentMethod}
                                                     </span>
                                                     <StatusBadge
@@ -1092,7 +1092,7 @@ export default function Expenses({
                                             {expense.entryType === 'receipt' ? (
                                                 Number(expense.totalAmount) >
                                                 0 ? (
-                                                    <span className="font-semibold text-ink">
+                                                    <span className="font-semibold text-white">
                                                         {formatReceiptAmount(
                                                             expense.totalAmount,
                                                             expense.receiptCurrency,
@@ -1104,7 +1104,7 @@ export default function Expenses({
                                                     </span>
                                                 )
                                             ) : (
-                                                <span className="font-semibold text-ink">
+                                                <span className="font-semibold text-white">
                                                     {formatMoney(
                                                         expense.totalAmount,
                                                     )}
@@ -1117,7 +1117,7 @@ export default function Expenses({
                                                     href={expense.receiptUrl}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border hairline text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border hairline text-slate-300 transition hover:border-brand-400/40 hover:bg-brand-500/10 hover:text-brand-200"
                                                     aria-label="Open receipt"
                                                     title="Open receipt"
                                                 >
@@ -1135,7 +1135,7 @@ export default function Expenses({
                                                 onClick={() =>
                                                     deleteExpense(expense)
                                                 }
-                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-600 transition hover:bg-rose-50"
+                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-500/30 text-rose-400 transition hover:bg-rose-500/10"
                                                 aria-label="Delete expense"
                                                 title="Delete expense"
                                             >
@@ -1148,7 +1148,7 @@ export default function Expenses({
                                 <tr>
                                     <td
                                         colSpan="8"
-                                        className="px-4 py-12 text-center text-sm text-slate-500"
+                                        className="px-4 py-12 text-center text-sm text-slate-400"
                                     >
                                         No purchases match the current filters.
                                     </td>
@@ -1269,7 +1269,7 @@ function ReceiptScanner({
                 accent="sky"
             />
 
-            <div className="mt-5 overflow-hidden rounded-xl border hairline bg-slate-50">
+            <div className="mt-5 overflow-hidden rounded-xl border hairline bg-white/5">
                 {receiptPreview ? (
                     <img
                         src={receiptPreview}
@@ -1277,7 +1277,7 @@ function ReceiptScanner({
                         className="max-h-72 w-full object-contain"
                     />
                 ) : (
-                    <div className="flex h-44 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-500">
+                    <div className="flex h-44 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-400">
                         <FileImage className="h-7 w-7 text-slate-300" />
                         {receiptName || 'No receipt selected'}
                     </div>
@@ -1287,13 +1287,13 @@ function ReceiptScanner({
             <div className="mt-4">
                 <div className="flex items-center justify-between text-sm">
                     <span
-                        className={`font-medium ${error ? 'text-rose-600' : 'text-slate-700'}`}
+                        className={`font-medium ${error ? 'text-rose-400' : 'text-slate-200'}`}
                     >
                         {scanning
                             ? 'Scanning…'
                             : ocrState.message || 'Ready'}
                     </span>
-                    <span className="text-slate-500">{ocrState.progress}%</span>
+                    <span className="text-slate-400">{ocrState.progress}%</span>
                 </div>
                 <div className="meter-track mt-2 h-2">
                     <div
@@ -1304,11 +1304,11 @@ function ReceiptScanner({
             </div>
 
             {extractedFields.length > 0 && (
-                <div className="mt-4 grid gap-3 rounded-xl border hairline bg-slate-50 p-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-3 rounded-xl border hairline bg-white/5 p-4 sm:grid-cols-2">
                     {extractedFields.map(([label, value]) => (
                         <div key={label}>
                             <p className="eyebrow">{label}</p>
-                            <p className="mt-1 break-words text-sm font-semibold text-ink">
+                            <p className="mt-1 break-words text-sm font-semibold text-white">
                                 {value}
                             </p>
                         </div>
@@ -1319,7 +1319,7 @@ function ReceiptScanner({
             {scanData.receipt_items?.length > 0 && (
                 <div className="mt-4 overflow-x-auto rounded-xl border hairline">
                     <table className="min-w-full divide-y hairline text-sm">
-                        <thead className="bg-slate-50 text-left text-xs font-semibold text-slate-500">
+                        <thead className="bg-white/5 text-left text-xs font-semibold text-slate-400">
                             <tr>
                                 <th className="px-3 py-2">Item</th>
                                 <th className="px-3 py-2">Catalog match</th>
@@ -1327,22 +1327,22 @@ function ReceiptScanner({
                                 <th className="px-3 py-2">Total</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y hairline bg-white">
+                        <tbody className="divide-y hairline bg-white/5">
                             {scanData.receipt_items.map((item, index) => (
                                 <tr key={`${item.description}-${index}`}>
-                                    <td className="px-3 py-2 text-slate-800">
+                                    <td className="px-3 py-2 text-slate-200">
                                         {item.description}
                                     </td>
                                     <td className="px-3 py-2">
                                         <CatalogMatch item={item} />
                                     </td>
-                                    <td className="px-3 py-2 text-slate-600">
+                                    <td className="px-3 py-2 text-slate-300">
                                         {item.quantity ?? '-'}
                                         {item.normalized_unit
                                             ? ` ${item.normalized_unit}`
                                             : ''}
                                     </td>
-                                    <td className="px-3 py-2 font-medium text-slate-800">
+                                    <td className="px-3 py-2 font-medium text-slate-200">
                                         {formatReceiptAmount(
                                             item.total,
                                             scanData.receipt_currency,
@@ -1382,7 +1382,7 @@ function CatalogMatch({ item }) {
     if (item.material_name) {
         return (
             <span className="inline-flex items-center gap-1.5">
-                <span className="badge bg-brand-50 text-brand-700">
+                <span className="badge bg-brand-500/15 text-brand-300">
                     {item.material_name}
                 </span>
                 {confidence !== null && (
@@ -1396,7 +1396,7 @@ function CatalogMatch({ item }) {
 
     if (item.canonical_name) {
         return (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
                 {item.canonical_name}
                 <span className="ml-1 text-slate-400">(unmatched)</span>
             </span>
@@ -1530,7 +1530,7 @@ function ReceiptAssistant() {
                         key={example}
                         type="button"
                         onClick={() => setQuestion(example)}
-                        className="rounded-full border hairline bg-white px-3 py-1 text-xs text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                        className="rounded-full border hairline bg-white/5 px-3 py-1 text-xs text-slate-300 transition hover:border-brand-400/40 hover:bg-brand-500/10 hover:text-brand-200"
                     >
                         {example}
                     </button>
@@ -1538,7 +1538,7 @@ function ReceiptAssistant() {
             </div>
 
             {state.status === 'error' && (
-                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
                     {state.error}
                 </div>
             )}
@@ -1546,8 +1546,8 @@ function ReceiptAssistant() {
             {state.status === 'done' && (
                 <div className="mt-4 space-y-4">
                     {state.answer && (
-                        <div className="rounded-xl border hairline bg-slate-50 p-4">
-                            <p className="whitespace-pre-wrap text-sm text-slate-800">
+                        <div className="rounded-xl border hairline bg-white/5 p-4">
+                            <p className="whitespace-pre-wrap text-sm text-slate-200">
                                 {state.answer}
                             </p>
                             {state.count !== null && (
@@ -1581,7 +1581,7 @@ function AssistantTable({ table, download, onDownload }) {
     return (
         <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-ink">
+                <h3 className="text-sm font-semibold text-white">
                     {table.title}
                 </h3>
                 <div className="flex gap-2">
@@ -1591,7 +1591,7 @@ function AssistantTable({ table, download, onDownload }) {
                             type="button"
                             onClick={() => onDownload(format)}
                             disabled={download.format !== null}
-                            className="inline-flex items-center gap-1.5 rounded-lg border hairline bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border hairline bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 shadow-sm transition hover:bg-white/5 disabled:opacity-50"
                         >
                             {download.format === format ? (
                                 <Download className="h-3.5 w-3.5 animate-pulse" />
@@ -1608,7 +1608,7 @@ function AssistantTable({ table, download, onDownload }) {
 
             <div className="overflow-x-auto rounded-xl border hairline">
                 <table className="min-w-full divide-y hairline text-sm">
-                    <thead className="bg-slate-50 text-left text-xs font-semibold text-slate-500">
+                    <thead className="bg-white/5 text-left text-xs font-semibold text-slate-400">
                         <tr>
                             {table.columns.map((column, index) => (
                                 <th
@@ -1620,13 +1620,13 @@ function AssistantTable({ table, download, onDownload }) {
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y hairline bg-white">
+                    <tbody className="divide-y hairline bg-white/5">
                         {table.rows.map((row, rowIndex) => (
                             <tr key={rowIndex}>
                                 {row.map((cell, cellIndex) => (
                                     <td
                                         key={cellIndex}
-                                        className="px-3 py-2 text-slate-700"
+                                        className="px-3 py-2 text-slate-200"
                                     >
                                         {cell}
                                     </td>
@@ -1638,7 +1638,7 @@ function AssistantTable({ table, download, onDownload }) {
             </div>
 
             {download.error && (
-                <p className="text-xs text-rose-600">{download.error}</p>
+                <p className="text-xs text-rose-400">{download.error}</p>
             )}
         </div>
     );
@@ -1684,16 +1684,16 @@ function ItemRow({
     onRemove,
 }) {
     return (
-        <div className="rounded-xl border hairline bg-slate-50/70 p-4">
+        <div className="rounded-xl border hairline bg-white/[0.04] p-4">
             <div className="flex items-center justify-between">
-                <p className="badge bg-white text-slate-600 shadow-sm">
+                <p className="badge bg-white/5 text-slate-300 shadow-sm">
                     Item {index + 1}
                 </p>
                 {canRemove && (
                     <button
                         type="button"
                         onClick={onRemove}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 transition hover:text-rose-700"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-rose-400 transition hover:text-rose-200"
                     >
                         <Trash2 className="h-3.5 w-3.5" />
                         Remove
@@ -1837,10 +1837,10 @@ function itemsFromScan(scan, materials, categories) {
 
 function SummaryCard({ label, value, icon: Icon, accent = 'brand' }) {
     const accents = {
-        brand: 'bg-brand-50 text-brand-600',
-        sky: 'bg-sky-50 text-sky-600',
-        amber: 'bg-amber-50 text-amber-600',
-        violet: 'bg-violet-50 text-violet-600',
+        brand: 'bg-brand-500/15 text-brand-300',
+        sky: 'bg-sky-500/15 text-sky-300',
+        amber: 'bg-amber-500/15 text-amber-300',
+        violet: 'bg-violet-500/15 text-violet-300',
     };
 
     return (
@@ -1848,7 +1848,7 @@ function SummaryCard({ label, value, icon: Icon, accent = 'brand' }) {
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="eyebrow">{label}</p>
-                    <p className="mt-2 truncate text-2xl font-bold text-ink">
+                    <p className="mt-2 truncate text-2xl font-bold text-white">
                         {value}
                     </p>
                 </div>
@@ -1864,9 +1864,9 @@ function SummaryCard({ label, value, icon: Icon, accent = 'brand' }) {
 
 function SectionHeading({ icon: Icon, title, subtitle, accent = 'brand' }) {
     const accents = {
-        brand: 'bg-brand-50 text-brand-600',
-        sky: 'bg-sky-50 text-sky-600',
-        violet: 'bg-violet-50 text-violet-600',
+        brand: 'bg-brand-500/15 text-brand-300',
+        sky: 'bg-sky-500/15 text-sky-300',
+        violet: 'bg-violet-500/15 text-violet-300',
     };
 
     return (
@@ -1877,9 +1877,9 @@ function SectionHeading({ icon: Icon, title, subtitle, accent = 'brand' }) {
                 <Icon className="h-5 w-5" />
             </span>
             <div>
-                <h2 className="text-base font-bold text-ink">{title}</h2>
+                <h2 className="text-base font-bold text-white">{title}</h2>
                 {subtitle && (
-                    <p className="text-sm text-slate-500">{subtitle}</p>
+                    <p className="text-sm text-slate-400">{subtitle}</p>
                 )}
             </div>
         </div>
@@ -1898,7 +1898,7 @@ function FormField({ label, error, children }) {
 
 function TableHead({ children }) {
     return (
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
             {children}
         </th>
     );
@@ -1906,7 +1906,7 @@ function TableHead({ children }) {
 
 function TableCell({ children }) {
     return (
-        <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-700">
+        <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-200">
             {children}
         </td>
     );
@@ -1914,13 +1914,13 @@ function TableCell({ children }) {
 
 function StatusBadge({ status }) {
     const classes = {
-        paid: 'bg-brand-50 text-brand-700',
-        pending: 'bg-amber-50 text-amber-700',
-        reconciled: 'bg-sky-50 text-sky-700',
+        paid: 'bg-brand-500/15 text-brand-300',
+        pending: 'bg-amber-500/15 text-amber-300',
+        reconciled: 'bg-sky-500/15 text-sky-300',
     };
 
     return (
-        <span className={`badge ${classes[status] || 'bg-slate-100 text-slate-700'}`}>
+        <span className={`badge ${classes[status] || 'bg-white/10 text-slate-300'}`}>
             {statusLabels[status] || status}
         </span>
     );
@@ -1941,8 +1941,8 @@ function Pagination({ links }) {
                         preserveScroll
                         className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
                             link.active
-                                ? 'border-brand-600 bg-brand-50 text-brand-700'
-                                : 'border-transparent text-slate-600 hover:bg-slate-100'
+                                ? 'border-brand-400/60 bg-brand-500/15 text-brand-300'
+                                : 'border-transparent text-slate-300 hover:bg-white/10'
                         }`}
                         dangerouslySetInnerHTML={{
                             __html: cleanPaginationLabel(link.label),

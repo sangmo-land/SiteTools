@@ -78,7 +78,7 @@ export default function GuestLayout({ children }) {
                     </div>
                 </div>
 
-                <p className="relative text-xs text-slate-500">
+                <p className="relative text-xs text-slate-400">
                     © {new Date().getFullYear()} SiteTools — Construction expense
                     &amp; field operations
                 </p>
@@ -94,7 +94,7 @@ export default function GuestLayout({ children }) {
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-lg ring-1 ring-white/20">
                             <Construction className="h-5 w-5" />
                         </span>
-                        <span className="text-lg font-bold text-ink">
+                        <span className="text-lg font-bold text-white">
                             SiteTools
                         </span>
                     </Link>

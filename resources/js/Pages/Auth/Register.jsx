@@ -26,10 +26,10 @@ export default function Register() {
             <Head title="Register" />
 
             <div className="mb-6">
-                <h1 className="text-xl font-bold text-ink">
+                <h1 className="text-xl font-bold text-white">
                     Create your workspace
                 </h1>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-400">
                     Start tracking site expenses in minutes.
                 </p>
             </div>
@@ -114,7 +114,7 @@ export default function Register() {
                 <div className="mt-4 flex items-center justify-end">
                     <Link
                         href={route('login')}
-                        className="rounded-md text-sm text-zinc-600 underline hover:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        className="rounded-md text-sm text-slate-400 underline hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                     >
                         Already registered?
                     </Link>
