@@ -146,6 +146,7 @@ class ReceiptQueryService
         - If the records do not contain enough information to answer, say so plainly.
         - When you total or compare amounts, add carefully and show the figure with its currency (e.g. "1 250 000 FCFA").
         - Keep the answer short and direct. Dates are ISO (YYYY-MM-DD); "recent" or "latest" refers to the most recent dates present.
+        - Reply in the same language as the question. If the question is written in French, answer entirely in French — including the table title and column headers.
 
         Respond with ONLY a JSON object (no prose, no markdown code fences) in exactly this shape:
         {"answer": "<concise natural-language answer>", "table": null}

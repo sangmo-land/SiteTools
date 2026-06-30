@@ -509,6 +509,36 @@ class SiteToolsTest extends TestCase
             ]);
     }
 
+    public function test_receipt_scanner_parses_french_textual_dates(): void
+    {
+        $receipt = UploadedFile::fake()->image('recu.jpg');
+        $field = fn (string $type, string $text) => [
+            'Type' => ['Text' => $type, 'Confidence' => 99],
+            'ValueDetection' => ['Text' => $text, 'Confidence' => 95],
+        ];
+        $handler = new MockHandler;
+        $handler->append(new Result([
+            'ExpenseDocuments' => [[
+                'SummaryFields' => [
+                    $field('VENDOR_NAME', 'Quincaillerie du Centre'),
+                    $field('INVOICE_RECEIPT_DATE', '15 mai 2026'),
+                    $field('TOTAL', '60 900'),
+                ],
+            ]],
+        ]));
+        $client = new TextractClient([
+            'version' => 'latest',
+            'region' => 'us-east-1',
+            'credentials' => ['key' => 'test-key', 'secret' => 'test-secret'],
+            'handler' => $handler,
+        ]);
+
+        $scan = (new AmazonTextractReceiptScanner)->scan($receipt, $client);
+
+        $this->assertSame('2026-05-15', $scan['purchase_date']);
+        $this->assertSame('Quincaillerie du Centre', $scan['vendor']);
+    }
+
     public function test_receipt_scanner_requires_amazon_textract_credentials(): void
     {
         config([

@@ -223,7 +223,9 @@ class AmazonTextractReceiptScanner
             return null;
         }
 
-        foreach (['!Y-m-d', '!d/m/Y', '!d-m-Y', '!Y/m/d', '!d.m.Y', '!d M Y', '!M d, Y'] as $format) {
+        $value = $this->translateFrenchMonths($value);
+
+        foreach (['!Y-m-d', '!d/m/Y', '!d-m-Y', '!Y/m/d', '!d.m.Y', '!d M Y', '!d F Y', '!M d, Y', '!F d, Y'] as $format) {
             $date = DateTimeImmutable::createFromFormat($format, $value);
             $errors = DateTimeImmutable::getLastErrors();
 
@@ -233,6 +235,38 @@ class AmazonTextractReceiptScanner
         }
 
         return null;
+    }
+
+    /**
+     * PHP's date parser only understands English month names, but Amazon
+     * Textract returns French receipt dates verbatim (e.g. "15 mai 2026").
+     * Swap French month names — full and common abbreviations — for their
+     * English equivalents so the textual formats above can parse them.
+     */
+    private function translateFrenchMonths(string $value): string
+    {
+        static $months = [
+            'janvier' => 'January', 'février' => 'February', 'fevrier' => 'February',
+            'mars' => 'March', 'avril' => 'April', 'mai' => 'May', 'juin' => 'June',
+            'juillet' => 'July', 'août' => 'August', 'aout' => 'August',
+            'septembre' => 'September', 'octobre' => 'October', 'novembre' => 'November',
+            'décembre' => 'December', 'decembre' => 'December',
+            'janv' => 'January', 'févr' => 'February', 'fevr' => 'February',
+            'avr' => 'April', 'juil' => 'July', 'sept' => 'September',
+            'oct' => 'October', 'nov' => 'November', 'déc' => 'December', 'dec' => 'December',
+        ];
+
+        $lower = mb_strtolower($value);
+
+        foreach ($months as $french => $english) {
+            $translated = preg_replace('/\b'.preg_quote($french, '/').'\.?(?![a-zà-ÿ])/u', $english, $lower);
+
+            if ($translated !== null && $translated !== $lower) {
+                return $translated;
+            }
+        }
+
+        return $value;
     }
 
     private function currency(array $summaryFields, ?array $totalField): ?string

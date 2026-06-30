@@ -1493,7 +1493,7 @@ function ReceiptAssistant() {
     const examples = [
         'How much did I spend on cement last month?',
         'Which vendor did I spend the most with?',
-        'List all pending receipts and their totals.',
+        'Combien ai-je dépensé en ciment le mois dernier ?',
     ];
 
     return (
@@ -1502,7 +1502,7 @@ function ReceiptAssistant() {
             <SectionHeading
                 icon={Sparkles}
                 title="Ask about your receipts"
-                subtitle="Plain-language answers drawn from your scanned receipts and recorded purchases"
+                subtitle="Ask in English or French — plain-language answers drawn from your scanned receipts and recorded purchases"
                 accent="violet"
             />
 
