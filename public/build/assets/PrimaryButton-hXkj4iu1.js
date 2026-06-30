@@ -1,0 +1,1 @@
+import{t as e}from"./app-Bo_VI6G4.js";var t=e();function n({className:e=``,disabled:n,children:r,...i}){return(0,t.jsx)(`button`,{...i,className:`btn btn-primary ${e}`,disabled:n,children:r})}export{n as t};

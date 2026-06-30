@@ -1,8 +1,7 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AuthenticatedLayout, { PageHeader } from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Calculator,
     Cuboid,
     PaintBucket,
     Ruler,
@@ -58,7 +57,8 @@ export default function Calculators() {
         const wallArea =
             Number(blocks.wallLength) * Number(blocks.wallHeight) -
             Number(blocks.openings);
-        const blockArea = Number(blocks.blockLength) * Number(blocks.blockHeight);
+        const blockArea =
+            Number(blocks.blockLength) * Number(blocks.blockHeight);
         const base = blockArea > 0 ? wallArea / blockArea : 0;
         const total = Math.ceil(base * (1 + Number(blocks.waste) / 100));
 
@@ -96,36 +96,41 @@ export default function Calculators() {
         return round(converters[unit.mode] || 0, 3);
     }, [unit]);
 
+    const unitLabel = {
+        metersToFeet: 'ft',
+        feetToMeters: 'm',
+        kgToTons: 't',
+        tonsToKg: 'kg',
+        sqmToSqft: 'ft²',
+        sqftToSqm: 'm²',
+    }[unit.mode];
+
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <p className="text-sm font-medium text-emerald-700">
-                            Site calculators
-                        </p>
-                        <h1 className="mt-1 text-2xl font-semibold text-zinc-950">
-                            Field quantity tools
-                        </h1>
-                    </div>
-                    <Link
-                        href={route('tools.expenses')}
-                        className="inline-flex w-fit items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Expense tracker
-                    </Link>
-                </div>
+                <PageHeader
+                    eyebrow="Site calculators"
+                    title="Field quantity tools"
+                    actions={
+                        <Link
+                            href={route('tools.expenses')}
+                            className="btn btn-secondary"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            Expense tracker
+                        </Link>
+                    }
+                />
             }
         >
             <Head title="Calculators" />
 
-            <div className="grid gap-6 xl:grid-cols-2">
+            <div className="grid gap-5 xl:grid-cols-2">
                 <ToolPanel
                     title="Concrete volume"
                     subtitle="Slabs, lintels, blinding, and pads"
                     icon={Cuboid}
-                    accent="emerald"
+                    accent="brand"
                     result={[
                         ['Concrete', `${concreteResult.volume} m³`],
                         ['Cement', `${concreteResult.cementBags} bags`],
@@ -234,7 +239,7 @@ export default function Calculators() {
                     title="Paint quantity"
                     subtitle="Coverage, coats, and allowance"
                     icon={PaintBucket}
-                    accent="cyan"
+                    accent="sky"
                     result={[
                         ['Paint', `${paintResult.litres} litres`],
                         ['4L buckets', paintResult.buckets4L],
@@ -284,16 +289,16 @@ export default function Calculators() {
                     />
                 </ToolPanel>
 
-                <section className="panel-card lift-in rounded-lg p-5">
+                <section className="card p-5 sm:p-6">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-50 text-rose-700">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
                             <Ruler className="h-5 w-5" />
                         </span>
                         <div>
-                            <h2 className="text-base font-semibold text-zinc-950">
+                            <h2 className="text-base font-bold text-ink">
                                 Unit converter
                             </h2>
-                            <p className="text-sm text-zinc-500">
+                            <p className="text-sm text-slate-500">
                                 Common field conversions
                             </p>
                         </div>
@@ -311,9 +316,7 @@ export default function Calculators() {
                             }
                         />
                         <label>
-                            <span className="text-sm font-medium text-zinc-700">
-                                Conversion
-                            </span>
+                            <span className="label">Conversion</span>
                             <select
                                 value={unit.mode}
                                 onChange={(event) =>
@@ -322,7 +325,7 @@ export default function Calculators() {
                                         mode: event.target.value,
                                     }))
                                 }
-                                className="mt-1 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                className="field mt-1.5"
                             >
                                 <option value="metersToFeet">
                                     Meters to feet
@@ -338,13 +341,16 @@ export default function Calculators() {
                         </label>
                     </div>
 
-                    <div className="soft-stripes mt-5 rounded-lg border border-rose-200 bg-rose-50 p-5">
-                        <div className="flex items-center gap-3">
-                            <Calculator className="h-5 w-5 text-rose-700" />
-                            <p className="text-3xl font-semibold text-zinc-950">
-                                {unitResult}
-                            </p>
-                        </div>
+                    <div className="ink-panel mt-5 overflow-hidden rounded-xl p-6 text-white">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-brand-300">
+                            Result
+                        </p>
+                        <p className="mt-2 text-4xl font-bold">
+                            {unitResult}{' '}
+                            <span className="text-xl font-semibold text-slate-400">
+                                {unitLabel}
+                            </span>
+                        </p>
                     </div>
                 </section>
             </div>
@@ -354,24 +360,22 @@ export default function Calculators() {
 
 function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
     const colorMap = {
-        emerald: 'bg-emerald-50 text-emerald-700',
-        amber: 'bg-amber-50 text-amber-700',
-        cyan: 'bg-cyan-50 text-cyan-700',
+        brand: 'bg-brand-50 text-brand-600',
+        amber: 'bg-amber-50 text-amber-600',
+        sky: 'bg-sky-50 text-sky-600',
     };
 
     return (
-        <section className="panel-card lift-in rounded-lg p-5">
+        <section className="card p-5 sm:p-6">
             <div className="flex items-center gap-3">
                 <span
-                    className={`flex h-10 w-10 items-center justify-center rounded-md ${colorMap[accent]}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${colorMap[accent]}`}
                 >
                     <Icon className="h-5 w-5" />
                 </span>
                 <div>
-                    <h2 className="text-base font-semibold text-zinc-950">
-                        {title}
-                    </h2>
-                    <p className="text-sm text-zinc-500">{subtitle}</p>
+                    <h2 className="text-base font-bold text-ink">{title}</h2>
+                    <p className="text-sm text-slate-500">{subtitle}</p>
                 </div>
             </div>
 
@@ -381,10 +385,12 @@ function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
                 {result.map(([label, value]) => (
                     <div
                         key={label}
-                        className="rounded-lg border border-zinc-200 bg-white/80 p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/40"
+                        className="rounded-xl border hairline bg-slate-50/70 p-4 transition hover:border-brand-300 hover:bg-brand-50/50"
                     >
-                        <p className="text-sm text-zinc-500">{label}</p>
-                        <p className="mt-1 text-2xl font-semibold text-zinc-950">
+                        <p className="text-xs font-medium text-slate-500">
+                            {label}
+                        </p>
+                        <p className="mt-1 text-2xl font-bold text-ink">
                             {value}
                         </p>
                     </div>
@@ -397,11 +403,11 @@ function ToolPanel({ title, subtitle, icon: Icon, accent, result, children }) {
 function NumberInput({ label, value, onChange, step = '0.1' }) {
     return (
         <label>
-            <span className="text-sm font-medium text-zinc-700">{label}</span>
+            <span className="label">{label}</span>
             <input
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
-                className="mt-1 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                className="field mt-1.5"
                 min="0"
                 step={step}
                 type="number"

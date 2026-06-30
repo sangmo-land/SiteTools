@@ -1,6 +1,5 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AuthenticatedLayout, { PageHeader } from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     Banknote,
@@ -155,10 +154,11 @@ export default function Expenses({
 
     const setItems = (next) => expenseForm.setData('items', next);
     const updateItem = (index, patch) =>
-        setItems(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+        setItems(
+            items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+        );
     const addItem = () => setItems([...items, blankItem()]);
-    const removeItem = (index) =>
-        setItems(items.filter((_, i) => i !== index));
+    const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
 
     const pickMaterial = (index, value) => {
         const material = materials.find((m) => String(m.id) === String(value));
@@ -348,115 +348,112 @@ export default function Expenses({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                            Expense tracker
-                        </p>
-                        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-                            Site purchases and receipts
-                        </h1>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <a
-                            href={route('tools.receipts.export')}
-                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2"
-                        >
-                            <FileSpreadsheet className="h-4 w-4" />
-                            Export receipt Excel
-                        </a>
-                        <a
-                            href="/admin/materials"
-                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2"
-                        >
-                            <PackageSearch className="h-4 w-4" />
-                            Manage materials
-                        </a>
-                        <Link
-                            href={route('tools.calculators')}
-                            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                        >
-                            <WalletCards className="h-4 w-4" />
-                            Open calculators
-                        </Link>
-                    </div>
-                </div>
+                <PageHeader
+                    eyebrow="Expense tracker"
+                    title="Purchases & receipts"
+                    actions={
+                        <>
+                            <a
+                                href={route('tools.receipts.export')}
+                                className="btn btn-secondary"
+                            >
+                                <FileSpreadsheet className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Export Excel
+                                </span>
+                            </a>
+                            <a
+                                href="/admin/materials"
+                                className="btn btn-secondary"
+                            >
+                                <PackageSearch className="h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                    Materials
+                                </span>
+                            </a>
+                            <Link
+                                href={route('tools.calculators')}
+                                className="btn btn-primary"
+                            >
+                                <WalletCards className="h-4 w-4" />
+                                Calculators
+                            </Link>
+                        </>
+                    }
+                />
             }
         >
             <Head title="Expenses" />
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <SummaryCard
                     label="Filtered total"
                     value={formatMoney(summary.total)}
                     icon={Banknote}
+                    accent="brand"
                 />
                 <SummaryCard
                     label="Entries"
                     value={summary.count}
                     icon={ReceiptText}
+                    accent="sky"
                 />
                 <SummaryCard
                     label="Average spend"
                     value={formatMoney(summary.average)}
                     icon={WalletCards}
+                    accent="amber"
                 />
                 <SummaryCard
                     label="With receipts"
                     value={summary.withReceipts}
                     icon={FileImage}
+                    accent="violet"
                 />
             </div>
 
-            <form
-                onSubmit={applyFilters}
-                className="mt-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
-            >
+            <form onSubmit={applyFilters} className="card mt-5 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="flex-1">
-                        <FieldShell icon={Search}>
-                            <input
-                                value={filterData.search}
-                                onChange={(event) =>
-                                    setFilterData((current) => ({
-                                        ...current,
-                                        search: event.target.value,
-                                    }))
-                                }
-                                className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                                placeholder="Search vendor, material, receipt text"
-                                type="search"
-                            />
-                        </FieldShell>
+                    <div className="relative flex-1">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                            value={filterData.search}
+                            onChange={(event) =>
+                                setFilterData((current) => ({
+                                    ...current,
+                                    search: event.target.value,
+                                }))
+                            }
+                            className="field pl-9"
+                            placeholder="Search vendor, material, receipt text"
+                            type="search"
+                        />
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                         <button
                             type="button"
                             onClick={() => setShowFilters((open) => !open)}
                             aria-expanded={showFilters}
-                            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                            className="btn btn-secondary"
                         >
                             <Filter className="h-4 w-4" />
                             Filters
                             {activeFilterCount > 0 && (
-                                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-emerald-600 px-1.5 text-xs font-semibold text-white">
+                                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-semibold text-white">
                                     {activeFilterCount}
                                 </span>
                             )}
                             <ChevronDown
-                                className={`h-4 w-4 text-zinc-400 transition ${showFilters ? 'rotate-180' : ''}`}
+                                className={`h-4 w-4 text-slate-400 transition ${showFilters ? 'rotate-180' : ''}`}
                             />
                         </button>
-                        <button
-                            type="submit"
-                            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                        >
+                        <button type="submit" className="btn btn-primary">
                             Apply
                         </button>
                         <button
                             type="button"
                             onClick={clearFilters}
-                            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                            className="btn btn-ghost"
                         >
                             Clear
                         </button>
@@ -464,7 +461,7 @@ export default function Expenses({
                 </div>
 
                 {showFilters && (
-                    <div className="mt-3 grid gap-3 border-t border-zinc-100 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                    <div className="mt-4 grid gap-3 border-t hairline pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                         <select
                             value={filterData.category}
                             onChange={(event) =>
@@ -473,7 +470,7 @@ export default function Expenses({
                                     category: event.target.value,
                                 }))
                             }
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="field"
                         >
                             <option value="">All categories</option>
                             {categories.map((category) => (
@@ -490,7 +487,7 @@ export default function Expenses({
                                     material: event.target.value,
                                 }))
                             }
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="field"
                         >
                             <option value="">All materials</option>
                             {materials.map((material) => (
@@ -507,7 +504,7 @@ export default function Expenses({
                                     project: event.target.value,
                                 }))
                             }
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="field"
                         >
                             <option value="">All projects</option>
                             {projects.map((project) => (
@@ -524,7 +521,7 @@ export default function Expenses({
                                     status: event.target.value,
                                 }))
                             }
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="field"
                         >
                             <option value="">All statuses</option>
                             {statuses.map((status) => (
@@ -542,7 +539,7 @@ export default function Expenses({
                                 }))
                             }
                             aria-label="From date"
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="field"
                             type="date"
                         />
                         <input
@@ -554,38 +551,29 @@ export default function Expenses({
                                 }))
                             }
                             aria-label="To date"
-                            className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="field"
                             type="date"
                         />
                     </div>
                 )}
             </form>
 
-            <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.78fr]">
-                <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
-                            <Plus className="h-5 w-5" />
-                        </span>
-                        <div>
-                            <h2 className="text-base font-semibold text-zinc-950">
-                                Add a receipt or purchase
-                            </h2>
-                            <p className="text-sm text-zinc-500">
-                                Upload only the receipt, or record all purchase
-                                details.
-                            </p>
-                        </div>
-                    </div>
+            <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_0.78fr]">
+                <section className="card p-5 sm:p-6">
+                    <SectionHeading
+                        icon={Plus}
+                        title="Add a receipt or purchase"
+                        subtitle="Upload only the receipt, or record all purchase details."
+                    />
 
-                    <div className="mt-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1">
+                    <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
                         <button
                             type="button"
                             onClick={() => setUploadMode('receipt')}
-                            className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                                 uploadMode === 'receipt'
-                                    ? 'bg-white text-zinc-900 shadow-sm'
-                                    : 'text-zinc-500 hover:text-zinc-900'
+                                    ? 'bg-white text-ink shadow-sm'
+                                    : 'text-slate-500 hover:text-ink'
                             }`}
                         >
                             Receipt only
@@ -593,10 +581,10 @@ export default function Expenses({
                         <button
                             type="button"
                             onClick={() => setUploadMode('expense')}
-                            className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                                 uploadMode === 'expense'
-                                    ? 'bg-white text-zinc-900 shadow-sm'
-                                    : 'text-zinc-500 hover:text-zinc-900'
+                                    ? 'bg-white text-ink shadow-sm'
+                                    : 'text-slate-500 hover:text-ink'
                             }`}
                         >
                             Full expense
@@ -608,7 +596,7 @@ export default function Expenses({
                             onSubmit={submitReceiptOnly}
                             className="mt-5 space-y-5"
                         >
-                            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
+                            <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-900">
                                 Choose a receipt. OCR will read its supplier,
                                 date, totals, and line items for the Excel
                                 export—no manual purchase details are required.
@@ -618,13 +606,15 @@ export default function Expenses({
                                 label="Receipt"
                                 error={receiptOnlyForm.errors.receipt}
                             >
-                                <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 transition hover:border-emerald-400 hover:bg-emerald-50/50">
-                                    <Upload className="h-6 w-6" />
-                                    <span className="font-medium text-zinc-900">
+                                <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed hairline bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 transition hover:border-brand-400 hover:bg-brand-50/50">
+                                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-brand-600 shadow-sm">
+                                        <Upload className="h-5 w-5" />
+                                    </span>
+                                    <span className="font-semibold text-ink">
                                         {receiptOnlyForm.data.receipt?.name ||
                                             'Choose JPG or PNG receipt'}
                                     </span>
-                                    <span className="text-xs text-zinc-500">
+                                    <span className="text-xs text-slate-500">
                                         JPG or PNG up to 5 MB
                                     </span>
                                     <input
@@ -645,7 +635,7 @@ export default function Expenses({
                                         !receiptOnlyForm.data.receipt ||
                                         receiptOnlyOcrState.status === 'scanning'
                                     }
-                                    className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                                    className="btn btn-primary"
                                 >
                                     <Upload className="h-4 w-4" />
                                     Upload receipt
@@ -670,7 +660,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                         placeholder="Supplier or store"
                                     />
                                 </FormField>
@@ -686,7 +676,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                     >
                                         <option value="">Unassigned</option>
                                         {projects.map((project) => (
@@ -711,7 +701,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                         type="date"
                                     />
                                 </FormField>
@@ -727,7 +717,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                     >
                                         {paymentMethods.map((method) => (
                                             <option key={method} value={method}>
@@ -748,7 +738,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                     >
                                         {statuses.map((status) => (
                                             <option key={status} value={status}>
@@ -762,15 +752,15 @@ export default function Expenses({
                             <div className="space-y-3">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-zinc-900">
+                                        <h3 className="text-sm font-semibold text-ink">
                                             Items in this purchase
                                         </h3>
-                                        <p className="text-xs text-zinc-500">
+                                        <p className="text-xs text-slate-500">
                                             Pick an item from your catalogue or
                                             add a brand-new one.
                                         </p>
                                     </div>
-                                    <span className="text-sm font-semibold text-zinc-900">
+                                    <span className="badge bg-brand-50 text-brand-700">
                                         Total {formatMoney(grandTotal)}
                                     </span>
                                 </div>
@@ -799,7 +789,7 @@ export default function Expenses({
                                 <button
                                     type="button"
                                     onClick={addItem}
-                                    className="inline-flex items-center gap-2 rounded-md border border-dashed border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-emerald-400 hover:bg-emerald-50"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-dashed hairline px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700"
                                 >
                                     <Plus className="h-4 w-4" />
                                     Add item
@@ -810,9 +800,9 @@ export default function Expenses({
                                 label="Receipt (optional)"
                                 error={expenseForm.errors.receipt}
                             >
-                                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-zinc-300 px-3 py-2 text-sm text-zinc-600 transition hover:border-emerald-400 hover:bg-emerald-50">
+                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed hairline px-3 py-2.5 text-sm text-slate-600 transition hover:border-brand-400 hover:bg-brand-50">
                                     <span className="flex items-center gap-2 truncate">
-                                        <Upload className="h-4 w-4 shrink-0" />
+                                        <Upload className="h-4 w-4 shrink-0 text-slate-400" />
                                         <span className="truncate">
                                             {expenseForm.data.receipt?.name ||
                                                 'Attach a JPG or PNG receipt to auto-fill items'}
@@ -840,21 +830,23 @@ export default function Expenses({
                                             event.target.value,
                                         )
                                     }
-                                    className="min-h-24 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    className="field min-h-24"
                                     placeholder="Delivery details, approvals, invoice number"
                                 />
                             </FormField>
 
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <p className="text-sm text-zinc-500">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-t hairline pt-4">
+                                <p className="text-sm text-slate-500">
                                     {items.length} item
                                     {items.length === 1 ? '' : 's'} ·{' '}
-                                    {formatMoney(grandTotal)}
+                                    <span className="font-semibold text-ink">
+                                        {formatMoney(grandTotal)}
+                                    </span>
                                 </p>
                                 <button
                                     type="submit"
                                     disabled={expenseForm.processing}
-                                    className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                                    className="btn btn-primary"
                                 >
                                     <Plus className="h-4 w-4" />
                                     Save purchase
@@ -864,7 +856,7 @@ export default function Expenses({
                     )}
                 </section>
 
-                <div className="space-y-6">
+                <div className="space-y-5">
                     <ReceiptScanner
                         receiptPreview={
                             uploadMode === 'receipt'
@@ -898,20 +890,12 @@ export default function Expenses({
                         }
                     />
 
-                    <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
-                                <FolderPlus className="h-5 w-5" />
-                            </span>
-                            <div>
-                                <h2 className="text-base font-semibold text-zinc-950">
-                                    New project
-                                </h2>
-                                <p className="text-sm text-zinc-500">
-                                    Assign purchases to sites
-                                </p>
-                            </div>
-                        </div>
+                    <section className="card p-5 sm:p-6">
+                        <SectionHeading
+                            icon={FolderPlus}
+                            title="New project"
+                            subtitle="Assign purchases to sites"
+                        />
 
                         <form
                             onSubmit={submitProject}
@@ -929,7 +913,7 @@ export default function Expenses({
                                             event.target.value,
                                         )
                                     }
-                                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                    className="field"
                                     placeholder="Bonamoussadi villa phase 1"
                                 />
                             </FormField>
@@ -946,7 +930,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                     />
                                 </FormField>
                                 <FormField
@@ -961,7 +945,7 @@ export default function Expenses({
                                                 event.target.value,
                                             )
                                         }
-                                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                                        className="field"
                                         min="0"
                                         step="1"
                                         type="number"
@@ -971,7 +955,7 @@ export default function Expenses({
                             <button
                                 type="submit"
                                 disabled={projectForm.processing}
-                                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                                className="btn btn-primary"
                             >
                                 <FolderPlus className="h-4 w-4" />
                                 Create project
@@ -983,24 +967,24 @@ export default function Expenses({
 
             <ReceiptAssistant />
 
-            <section className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
-                <div className="flex flex-col gap-2 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <section className="card mt-5 overflow-hidden">
+                <div className="flex flex-col gap-2 border-b hairline p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
-                        <h2 className="text-base font-semibold text-zinc-950">
+                        <h2 className="text-base font-bold text-ink">
                             Purchase log
                         </h2>
-                        <p className="mt-1 text-sm text-zinc-500">
+                        <p className="mt-0.5 text-sm text-slate-500">
                             Receipts, payment state, and project allocation
                         </p>
                     </div>
-                    <span className="text-sm font-medium text-zinc-500">
+                    <span className="badge bg-slate-100 text-slate-600">
                         {expenses.total} records
                     </span>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-zinc-200">
-                        <thead className="bg-zinc-50">
+                    <table className="min-w-full divide-y hairline">
+                        <thead className="bg-slate-50/80">
                             <tr>
                                 <TableHead>Entry</TableHead>
                                 <TableHead>Project</TableHead>
@@ -1012,24 +996,24 @@ export default function Expenses({
                                 <TableHead />
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-200 bg-white">
+                        <tbody className="divide-y hairline bg-white">
                             {expenses.data.length ? (
                                 expenses.data.map((expense) => (
                                     <tr
                                         key={expense.id}
-                                        className="transition hover:bg-zinc-50"
+                                        className="transition hover:bg-slate-50/70"
                                     >
                                         <TableCell>
-                                            <p className="font-semibold text-zinc-950">
+                                            <p className="font-semibold text-ink">
                                                 {expense.title}
                                             </p>
-                                            <p className="mt-1 text-sm text-zinc-500">
+                                            <p className="mt-0.5 text-sm text-slate-500">
                                                 {expense.entryType === 'receipt'
                                                     ? expense.receiptOriginalName
-                                                    : `${expense.vendor || 'No vendor'} - ${expense.category}`}
+                                                    : `${expense.vendor || 'No vendor'} · ${expense.category}`}
                                             </p>
                                             {expense.lineItems?.length > 1 && (
-                                                <ul className="mt-1.5 max-w-xs space-y-0.5 text-xs text-zinc-500">
+                                                <ul className="mt-1.5 max-w-xs space-y-0.5 text-xs text-slate-500">
                                                     {expense.lineItems.map(
                                                         (line, lineIndex) => (
                                                             <li
@@ -1041,7 +1025,9 @@ export default function Expenses({
                                                                     null
                                                                         ? `${Number(line.quantity)} × `
                                                                         : ''}
-                                                                    {line.description}
+                                                                    {
+                                                                        line.description
+                                                                    }
                                                                 </span>
                                                                 <span className="shrink-0 tabular-nums">
                                                                     {formatMoney(
@@ -1056,12 +1042,19 @@ export default function Expenses({
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            {expense.project?.name ||
-                                                'Unassigned'}
+                                            {expense.project?.name ? (
+                                                <span className="badge bg-slate-100 text-slate-700">
+                                                    {expense.project.name}
+                                                </span>
+                                            ) : (
+                                                <span className="text-slate-400">
+                                                    Unassigned
+                                                </span>
+                                            )}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="inline-flex items-center gap-2">
-                                                <CalendarDays className="h-4 w-4 text-zinc-400" />
+                                            <span className="inline-flex items-center gap-2 text-slate-600">
+                                                <CalendarDays className="h-4 w-4 text-slate-400" />
                                                 {expense.purchaseDate}
                                             </span>
                                         </TableCell>
@@ -1076,7 +1069,7 @@ export default function Expenses({
                                             {expense.entryType === 'receipt' ? (
                                                 expense.paymentMethod ===
                                                 'Not provided' ? (
-                                                    <span className="text-zinc-400">
+                                                    <span className="text-slate-400">
                                                         Not provided
                                                     </span>
                                                 ) : (
@@ -1086,7 +1079,7 @@ export default function Expenses({
                                                 )
                                             ) : (
                                                 <div className="space-y-1">
-                                                    <span>
+                                                    <span className="text-slate-600">
                                                         {expense.paymentMethod}
                                                     </span>
                                                     <StatusBadge
@@ -1099,19 +1092,19 @@ export default function Expenses({
                                             {expense.entryType === 'receipt' ? (
                                                 Number(expense.totalAmount) >
                                                 0 ? (
-                                                    <span className="font-semibold text-zinc-950">
+                                                    <span className="font-semibold text-ink">
                                                         {formatReceiptAmount(
                                                             expense.totalAmount,
                                                             expense.receiptCurrency,
                                                         )}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-zinc-400">
+                                                    <span className="text-slate-400">
                                                         Not provided
                                                     </span>
                                                 )
                                             ) : (
-                                                <span className="font-semibold text-zinc-950">
+                                                <span className="font-semibold text-ink">
                                                     {formatMoney(
                                                         expense.totalAmount,
                                                     )}
@@ -1124,14 +1117,14 @@ export default function Expenses({
                                                     href={expense.receiptUrl}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 transition hover:bg-zinc-50"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border hairline text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
                                                     aria-label="Open receipt"
                                                     title="Open receipt"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             ) : (
-                                                <span className="text-zinc-400">
+                                                <span className="text-slate-400">
                                                     None
                                                 </span>
                                             )}
@@ -1142,7 +1135,7 @@ export default function Expenses({
                                                 onClick={() =>
                                                     deleteExpense(expense)
                                                 }
-                                                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-700 transition hover:bg-red-50"
+                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-600 transition hover:bg-rose-50"
                                                 aria-label="Delete expense"
                                                 title="Delete expense"
                                             >
@@ -1155,7 +1148,7 @@ export default function Expenses({
                                 <tr>
                                     <td
                                         colSpan="8"
-                                        className="px-4 py-10 text-center text-sm text-zinc-500"
+                                        className="px-4 py-12 text-center text-sm text-slate-500"
                                     >
                                         No purchases match the current filters.
                                     </td>
@@ -1260,25 +1253,23 @@ function ReceiptScanner({
                 : null,
         ],
         ['Line items', scanData.receipt_items?.length || null],
-    ].filter(([, value]) => value !== null && value !== undefined && value !== '');
+    ].filter(
+        ([, value]) => value !== null && value !== undefined && value !== '',
+    );
+
+    const scanning = ocrState.status === 'scanning';
+    const error = ocrState.status === 'error';
 
     return (
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
-                    <FileImage className="h-5 w-5" />
-                </span>
-                <div>
-                    <h2 className="text-base font-semibold text-zinc-950">
-                        Receipt scanner
-                    </h2>
-                    <p className="text-sm text-zinc-500">
-                        Amazon Textract expense analysis for JPG/PNG receipts
-                    </p>
-                </div>
-            </div>
+        <section className="card p-5 sm:p-6">
+            <SectionHeading
+                icon={FileImage}
+                title="Receipt scanner"
+                subtitle="Amazon Textract analysis for JPG/PNG receipts"
+                accent="sky"
+            />
 
-            <div className="mt-5 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50">
+            <div className="mt-5 overflow-hidden rounded-xl border hairline bg-slate-50">
                 {receiptPreview ? (
                     <img
                         src={receiptPreview}
@@ -1286,8 +1277,8 @@ function ReceiptScanner({
                         className="max-h-72 w-full object-contain"
                     />
                 ) : (
-                    <div className="flex h-44 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-zinc-500">
-                        <FileImage className="h-7 w-7 text-zinc-400" />
+                    <div className="flex h-44 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-500">
+                        <FileImage className="h-7 w-7 text-slate-300" />
                         {receiptName || 'No receipt selected'}
                     </div>
                 )}
@@ -1295,29 +1286,29 @@ function ReceiptScanner({
 
             <div className="mt-4">
                 <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-zinc-700">
-                        {ocrState.status === 'scanning'
-                            ? 'Scanning'
+                    <span
+                        className={`font-medium ${error ? 'text-rose-600' : 'text-slate-700'}`}
+                    >
+                        {scanning
+                            ? 'Scanning…'
                             : ocrState.message || 'Ready'}
                     </span>
-                    <span className="text-zinc-500">{ocrState.progress}%</span>
+                    <span className="text-slate-500">{ocrState.progress}%</span>
                 </div>
-                <div className="mt-2 h-2 rounded-md bg-zinc-100">
+                <div className="meter-track mt-2 h-2">
                     <div
-                        className="h-2 rounded-md bg-emerald-600 transition-all"
+                        className={`h-2 rounded-full transition-all ${error ? 'bg-rose-500' : 'bg-brand-600'} ${scanning ? 'shimmer' : ''}`}
                         style={{ width: `${ocrState.progress}%` }}
                     />
                 </div>
             </div>
 
             {extractedFields.length > 0 && (
-                <div className="mt-4 grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-3 rounded-xl border hairline bg-slate-50 p-4 sm:grid-cols-2">
                     {extractedFields.map(([label, value]) => (
                         <div key={label}>
-                            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                {label}
-                            </p>
-                            <p className="mt-1 break-words text-sm font-semibold text-zinc-950">
+                            <p className="eyebrow">{label}</p>
+                            <p className="mt-1 break-words text-sm font-semibold text-ink">
                                 {value}
                             </p>
                         </div>
@@ -1326,9 +1317,9 @@ function ReceiptScanner({
             )}
 
             {scanData.receipt_items?.length > 0 && (
-                <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200">
-                    <table className="min-w-full divide-y divide-zinc-200 text-sm">
-                        <thead className="bg-zinc-50 text-left text-xs font-semibold text-zinc-500">
+                <div className="mt-4 overflow-x-auto rounded-xl border hairline">
+                    <table className="min-w-full divide-y hairline text-sm">
+                        <thead className="bg-slate-50 text-left text-xs font-semibold text-slate-500">
                             <tr>
                                 <th className="px-3 py-2">Item</th>
                                 <th className="px-3 py-2">Catalog match</th>
@@ -1336,22 +1327,22 @@ function ReceiptScanner({
                                 <th className="px-3 py-2">Total</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-100 bg-white">
+                        <tbody className="divide-y hairline bg-white">
                             {scanData.receipt_items.map((item, index) => (
                                 <tr key={`${item.description}-${index}`}>
-                                    <td className="px-3 py-2 text-zinc-800">
+                                    <td className="px-3 py-2 text-slate-800">
                                         {item.description}
                                     </td>
                                     <td className="px-3 py-2">
                                         <CatalogMatch item={item} />
                                     </td>
-                                    <td className="px-3 py-2 text-zinc-600">
+                                    <td className="px-3 py-2 text-slate-600">
                                         {item.quantity ?? '-'}
                                         {item.normalized_unit
                                             ? ` ${item.normalized_unit}`
                                             : ''}
                                     </td>
-                                    <td className="px-3 py-2 font-medium text-zinc-800">
+                                    <td className="px-3 py-2 font-medium text-slate-800">
                                         {formatReceiptAmount(
                                             item.total,
                                             scanData.receipt_currency,
@@ -1367,7 +1358,7 @@ function ReceiptScanner({
             <textarea
                 value={receiptText}
                 onChange={(event) => onReceiptTextChange(event.target.value)}
-                className="mt-4 min-h-32 w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                className="field mt-4 min-h-32"
                 placeholder="Amazon Textract OCR text appears here"
             />
         </section>
@@ -1391,11 +1382,13 @@ function CatalogMatch({ item }) {
     if (item.material_name) {
         return (
             <span className="inline-flex items-center gap-1.5">
-                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                <span className="badge bg-brand-50 text-brand-700">
                     {item.material_name}
                 </span>
                 {confidence !== null && (
-                    <span className="text-xs text-zinc-400">{confidence}%</span>
+                    <span className="text-xs text-slate-400">
+                        {confidence}%
+                    </span>
                 )}
             </span>
         );
@@ -1403,14 +1396,14 @@ function CatalogMatch({ item }) {
 
     if (item.canonical_name) {
         return (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-slate-500">
                 {item.canonical_name}
-                <span className="ml-1 text-zinc-400">(unmatched)</span>
+                <span className="ml-1 text-slate-400">(unmatched)</span>
             </span>
         );
     }
 
-    return <span className="text-xs text-zinc-400">-</span>;
+    return <span className="text-xs text-slate-400">-</span>;
 }
 
 function ReceiptAssistant() {
@@ -1504,34 +1497,27 @@ function ReceiptAssistant() {
     ];
 
     return (
-        <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600">
-                    <Sparkles className="h-5 w-5" />
-                </span>
-                <div>
-                    <h2 className="text-base font-semibold text-zinc-900">
-                        Ask about your receipts
-                    </h2>
-                    <p className="text-sm text-zinc-500">
-                        Plain-language answers drawn from your scanned receipts
-                        and recorded purchases
-                    </p>
-                </div>
-            </div>
+        <section className="card relative mt-5 overflow-hidden p-5 sm:p-6">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
+            <SectionHeading
+                icon={Sparkles}
+                title="Ask about your receipts"
+                subtitle="Plain-language answers drawn from your scanned receipts and recorded purchases"
+                accent="violet"
+            />
 
             <form onSubmit={ask} className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <input
                     value={question}
                     onChange={(event) => setQuestion(event.target.value)}
-                    className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    className="field"
                     placeholder="e.g. How much did I spend on cement last month?"
                     type="text"
                 />
                 <button
                     type="submit"
                     disabled={state.status === 'loading' || !question.trim()}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+                    className="btn btn-primary shrink-0"
                 >
                     <Send className="h-4 w-4" />
                     {state.status === 'loading' ? 'Thinking…' : 'Ask'}
@@ -1544,7 +1530,7 @@ function ReceiptAssistant() {
                         key={example}
                         type="button"
                         onClick={() => setQuestion(example)}
-                        className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600 transition hover:border-zinc-300 hover:bg-zinc-50"
+                        className="rounded-full border hairline bg-white px-3 py-1 text-xs text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
                     >
                         {example}
                     </button>
@@ -1552,7 +1538,7 @@ function ReceiptAssistant() {
             </div>
 
             {state.status === 'error' && (
-                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                     {state.error}
                 </div>
             )}
@@ -1560,12 +1546,12 @@ function ReceiptAssistant() {
             {state.status === 'done' && (
                 <div className="mt-4 space-y-4">
                     {state.answer && (
-                        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                            <p className="whitespace-pre-wrap text-sm text-zinc-800">
+                        <div className="rounded-xl border hairline bg-slate-50 p-4">
+                            <p className="whitespace-pre-wrap text-sm text-slate-800">
                                 {state.answer}
                             </p>
                             {state.count !== null && (
-                                <p className="mt-3 text-xs text-zinc-400">
+                                <p className="mt-3 text-xs text-slate-400">
                                     Based on {state.count} record
                                     {state.count === 1 ? '' : 's'}.
                                 </p>
@@ -1595,7 +1581,7 @@ function AssistantTable({ table, download, onDownload }) {
     return (
         <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-zinc-900">
+                <h3 className="text-sm font-semibold text-ink">
                     {table.title}
                 </h3>
                 <div className="flex gap-2">
@@ -1605,7 +1591,7 @@ function AssistantTable({ table, download, onDownload }) {
                             type="button"
                             onClick={() => onDownload(format)}
                             disabled={download.format !== null}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border hairline bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
                         >
                             {download.format === format ? (
                                 <Download className="h-3.5 w-3.5 animate-pulse" />
@@ -1620,9 +1606,9 @@ function AssistantTable({ table, download, onDownload }) {
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-zinc-200">
-                <table className="min-w-full divide-y divide-zinc-200 text-sm">
-                    <thead className="bg-zinc-50 text-left text-xs font-semibold text-zinc-500">
+            <div className="overflow-x-auto rounded-xl border hairline">
+                <table className="min-w-full divide-y hairline text-sm">
+                    <thead className="bg-slate-50 text-left text-xs font-semibold text-slate-500">
                         <tr>
                             {table.columns.map((column, index) => (
                                 <th
@@ -1634,13 +1620,13 @@ function AssistantTable({ table, download, onDownload }) {
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
+                    <tbody className="divide-y hairline bg-white">
                         {table.rows.map((row, rowIndex) => (
                             <tr key={rowIndex}>
                                 {row.map((cell, cellIndex) => (
                                     <td
                                         key={cellIndex}
-                                        className="px-3 py-2 text-zinc-700"
+                                        className="px-3 py-2 text-slate-700"
                                     >
                                         {cell}
                                     </td>
@@ -1652,7 +1638,7 @@ function AssistantTable({ table, download, onDownload }) {
             </div>
 
             {download.error && (
-                <p className="text-xs text-red-600">{download.error}</p>
+                <p className="text-xs text-rose-600">{download.error}</p>
             )}
         </div>
     );
@@ -1698,16 +1684,16 @@ function ItemRow({
     onRemove,
 }) {
     return (
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+        <div className="rounded-xl border hairline bg-slate-50/70 p-4">
             <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <p className="badge bg-white text-slate-600 shadow-sm">
                     Item {index + 1}
                 </p>
                 {canRemove && (
                     <button
                         type="button"
                         onClick={onRemove}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-red-600 transition hover:text-red-700"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 transition hover:text-rose-700"
                     >
                         <Trash2 className="h-3.5 w-3.5" />
                         Remove
@@ -1720,7 +1706,7 @@ function ItemRow({
                     <select
                         value={item.material_id}
                         onChange={(event) => onPickMaterial(event.target.value)}
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        className="field"
                     >
                         <option value="">+ New item</option>
                         {materials.map((material) => (
@@ -1738,7 +1724,7 @@ function ItemRow({
                         onChange={(event) =>
                             onField('description', event.target.value)
                         }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        className="field"
                         placeholder="e.g. Cement 42.5"
                     />
                 </FormField>
@@ -1751,7 +1737,7 @@ function ItemRow({
                         onChange={(event) =>
                             onField('category', event.target.value)
                         }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        className="field"
                     >
                         {categories.map((category) => (
                             <option key={category} value={category}>
@@ -1766,7 +1752,7 @@ function ItemRow({
                         onChange={(event) =>
                             onField('quantity', event.target.value)
                         }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        className="field"
                         min="0"
                         step="0.1"
                         type="number"
@@ -1777,7 +1763,7 @@ function ItemRow({
                     <input
                         value={item.unit}
                         onChange={(event) => onField('unit', event.target.value)}
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        className="field"
                         placeholder="bag, pcs"
                     />
                 </FormField>
@@ -1787,7 +1773,7 @@ function ItemRow({
                         onChange={(event) =>
                             onField('unit_price', event.target.value)
                         }
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        className="field"
                         min="0"
                         step="1"
                         type="number"
@@ -1797,8 +1783,10 @@ function ItemRow({
                 <FormField label="Line total" error={error('total')}>
                     <input
                         value={item.total}
-                        onChange={(event) => onField('total', event.target.value)}
-                        className="w-full rounded-md border-zinc-300 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        onChange={(event) =>
+                            onField('total', event.target.value)
+                        }
+                        className="field"
                         min="0"
                         step="1"
                         type="number"
@@ -1847,19 +1835,26 @@ function itemsFromScan(scan, materials, categories) {
     });
 }
 
-function SummaryCard({ label, value, icon: Icon }) {
+function SummaryCard({ label, value, icon: Icon, accent = 'brand' }) {
+    const accents = {
+        brand: 'bg-brand-50 text-brand-600',
+        sky: 'bg-sky-50 text-sky-600',
+        amber: 'bg-amber-50 text-amber-600',
+        violet: 'bg-violet-50 text-violet-600',
+    };
+
     return (
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-                <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                        {label}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-zinc-900">
+        <section className="card card-hover p-5">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="eyebrow">{label}</p>
+                    <p className="mt-2 truncate text-2xl font-bold text-ink">
                         {value}
                     </p>
                 </div>
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500">
+                <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accents[accent]}`}
+                >
                     <Icon className="h-5 w-5" />
                 </span>
             </div>
@@ -1867,11 +1862,26 @@ function SummaryCard({ label, value, icon: Icon }) {
     );
 }
 
-function FieldShell({ icon: Icon, children }) {
+function SectionHeading({ icon: Icon, title, subtitle, accent = 'brand' }) {
+    const accents = {
+        brand: 'bg-brand-50 text-brand-600',
+        sky: 'bg-sky-50 text-sky-600',
+        violet: 'bg-violet-50 text-violet-600',
+    };
+
     return (
-        <div className="relative">
-            <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-            <div className="[&_input]:pl-9">{children}</div>
+        <div className="flex items-center gap-3">
+            <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accents[accent]}`}
+            >
+                <Icon className="h-5 w-5" />
+            </span>
+            <div>
+                <h2 className="text-base font-bold text-ink">{title}</h2>
+                {subtitle && (
+                    <p className="text-sm text-slate-500">{subtitle}</p>
+                )}
+            </div>
         </div>
     );
 }
@@ -1879,8 +1889,8 @@ function FieldShell({ icon: Icon, children }) {
 function FormField({ label, error, children }) {
     return (
         <div>
-            <InputLabel value={label} />
-            <div className="mt-1">{children}</div>
+            <span className="label">{label}</span>
+            <div className="mt-1.5">{children}</div>
             <InputError message={error} className="mt-2" />
         </div>
     );
@@ -1888,7 +1898,7 @@ function FormField({ label, error, children }) {
 
 function TableHead({ children }) {
     return (
-        <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-500">
+        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             {children}
         </th>
     );
@@ -1896,7 +1906,7 @@ function TableHead({ children }) {
 
 function TableCell({ children }) {
     return (
-        <td className="whitespace-nowrap px-4 py-4 text-sm text-zinc-700">
+        <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-700">
             {children}
         </td>
     );
@@ -1904,15 +1914,13 @@ function TableCell({ children }) {
 
 function StatusBadge({ status }) {
     const classes = {
-        paid: 'bg-emerald-50 text-emerald-700',
+        paid: 'bg-brand-50 text-brand-700',
         pending: 'bg-amber-50 text-amber-700',
-        reconciled: 'bg-cyan-50 text-cyan-700',
+        reconciled: 'bg-sky-50 text-sky-700',
     };
 
     return (
-        <span
-            className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${classes[status] || 'bg-zinc-100 text-zinc-700'}`}
-        >
+        <span className={`badge ${classes[status] || 'bg-slate-100 text-slate-700'}`}>
             {statusLabels[status] || status}
         </span>
     );
@@ -1924,17 +1932,17 @@ function Pagination({ links }) {
     }
 
     return (
-        <div className="flex flex-wrap items-center gap-2 border-t border-zinc-200 p-4">
+        <div className="flex flex-wrap items-center gap-2 border-t hairline p-4">
             {links.map((link, index) =>
                 link.url ? (
                     <Link
                         key={`${link.label}-${index}`}
                         href={link.url}
                         preserveScroll
-                        className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                        className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
                             link.active
-                                ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                                : 'border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+                                ? 'border-brand-600 bg-brand-50 text-brand-700'
+                                : 'border-transparent text-slate-600 hover:bg-slate-100'
                         }`}
                         dangerouslySetInnerHTML={{
                             __html: cleanPaginationLabel(link.label),
@@ -1943,7 +1951,7 @@ function Pagination({ links }) {
                 ) : (
                     <span
                         key={`${link.label}-${index}`}
-                        className="rounded-md border border-zinc-200 px-3 py-2 text-sm text-zinc-400"
+                        className="rounded-lg px-3 py-2 text-sm text-slate-300"
                         dangerouslySetInnerHTML={{
                             __html: cleanPaginationLabel(link.label),
                         }}

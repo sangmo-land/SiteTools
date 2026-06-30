@@ -25,8 +25,15 @@ export default function Login({ status, canResetPassword }) {
         <GuestLayout>
             <Head title="Log in" />
 
+            <div className="mb-6">
+                <h1 className="text-xl font-bold text-ink">Welcome back</h1>
+                <p className="mt-1 text-sm text-slate-500">
+                    Log in to your SiteTools workspace.
+                </p>
+            </div>
+
             {status && (
-                <div className="mb-4 text-sm font-medium text-emerald-700">
+                <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700">
                     {status}
                 </div>
             )}

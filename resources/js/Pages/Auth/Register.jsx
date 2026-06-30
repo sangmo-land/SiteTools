@@ -25,6 +25,15 @@ export default function Register() {
         <GuestLayout>
             <Head title="Register" />
 
+            <div className="mb-6">
+                <h1 className="text-xl font-bold text-ink">
+                    Create your workspace
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                    Start tracking site expenses in minutes.
+                </p>
+            </div>
+
             <form onSubmit={submit}>
                 <div>
                     <InputLabel htmlFor="name" value="Name" />

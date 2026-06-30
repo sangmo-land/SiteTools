@@ -1,0 +1,1 @@
+import{c as e,t,u as n}from"./app-Bo_VI6G4.js";var r=n(e(),1),i=t(),a=(0,r.forwardRef)(function({type:e=`text`,className:t=``,isFocused:n=!1,...a},o){let s=(0,r.useRef)(null);return(0,r.useImperativeHandle)(o,()=>({focus:()=>s.current?.focus()})),(0,r.useEffect)(()=>{n&&s.current?.focus()},[n]),(0,i.jsx)(`input`,{...a,type:e,className:`field `+t,ref:s})});export{a as t};
